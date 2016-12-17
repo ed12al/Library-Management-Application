@@ -8,17 +8,12 @@ public class ConnectionUtil {
 	private static String driver = "com.mysql.jdbc.Driver";
 	private static String url = "jdbc:mysql://localhost/library";
 	private static String user = "root";
-	private static String pass = "root";
+	private static String pass = "Edc12@SQL";
 
-	public static Connection getConnection() {
-		Connection conn = null;
-		try {
-			Class.forName(driver);
-			conn = DriverManager.getConnection(url, user, pass);
-			conn.setAutoCommit(false);
-		} catch (ClassNotFoundException | SQLException e) {
-			e.printStackTrace();
-		}
+	public static Connection getConnection() throws SQLException, ClassNotFoundException {
+		Class.forName(driver);
+		Connection conn = DriverManager.getConnection(url, user, pass);
+		conn.setAutoCommit(Boolean.FALSE);
 		return conn;
 	}
 }

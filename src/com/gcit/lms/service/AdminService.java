@@ -5,21 +5,26 @@ import java.sql.SQLException;
 
 import com.gcit.lms.dao.AuthorDAO;
 import com.gcit.lms.entity.Author;
+import com.gcit.lms.entity.Book;
 
 public class AdminService {
 	public void addAuthor(Author author) throws SQLException{
-		Connection conn =  ConnectionUtil.getConnection();
+		Connection conn =  null;
 		try {
+			conn = ConnectionUtil.getConnection();
 			AuthorDAO adao = new AuthorDAO(conn);
 			adao.addAuthor(author);
-			//author.setAuthorID(authorID);
-			//adao.addBookAuthor(author);
 			conn.commit();
-		} catch (SQLException e) {
+		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
-			conn.rollback();
+			if(conn != null) conn.rollback();
 		} finally{
-			conn.close();
+			if(conn != null) conn.close();
 		}
 	}
+	
+	public void addBook(Book book) throws SQLException{
+		
+	}
+	
 }

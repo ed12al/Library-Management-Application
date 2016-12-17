@@ -1,9 +1,9 @@
 *.class
 
 .DS_Store
+.project
 .classpath
 .settings
-.project
 
 build/*
 target/*

@@ -16,17 +16,13 @@ public class AuthorDAO extends BaseDAO{
 	}
 	
 	public void addAuthor(Author author) throws SQLException {
-		save("insert into tbl_author (authorName) values (?)", new Object[] { author.getAuthorName() });
+		save("insert into tbl_author (authorName) values (?)", 
+				new Object[] { author.getAuthorName() });
 	}
 	
 	public Integer addAuthorWithID(Author author) throws SQLException {
-		return saveWithID("insert into tbl_author (authorName) values (?)", new Object[] { author.getAuthorName() });
-	}
-	
-	public void addBookAuthor(Author author) throws SQLException {
-		for(Book b: author.getBooks()){
-			save("insert into tbl_book_authors (bookId, authorId) values (?, ?)", new Object[] { author.getAuthorId(), b.getBookId() });
-		}
+		return saveWithID("insert into tbl_author (authorName) values (?)", 
+				new Object[] { author.getAuthorName() });
 	}
 
 	public void updateAuthor(Author author) throws SQLException {
@@ -35,21 +31,58 @@ public class AuthorDAO extends BaseDAO{
 	}
 
 	public void deleteAuthor(Author author) throws SQLException {
-		save("delete from tbl_author where authorId = ?", new Object[] { author.getAuthorId() });
+		save("delete from tbl_author where authorId = ?", 
+				new Object[] { author.getAuthorId() });
 	}
 
 	public List<Author> readAllAuthors() throws SQLException {
-		return read("select * from tbl_author", null);
+		return readAll("select * from tbl_author", null);
 	}
 	
+	public List<Author> readAllAuthorsWithPageNo(Integer pageNo, Integer pageSize) throws SQLException {
+		return readAllWithPageNo("select * from tbl_author", null, pageNo, pageSize);
+	}
+	
+	public Integer getAuthorsCount() throws SQLException{
+		return getCount("select count(*) AS COUNT from tbl_author", null);
+	}
+	
+	public Author readAuthorById(Author author) throws SQLException{
+		List<Author> authors =  readAll(
+				"select * from tbl_author where authorId = ?", 
+				new Object[]{author.getAuthorId()});
+		if(authors!=null){
+			return authors.get(0);
+		}
+		return null;
+	}
+	
+	public Author readAuthorFirstLevelById(Author author) throws SQLException{
+		List<Author> authors =  readAllFirstLevel(
+				"select * from tbl_author where authorId = ?", 
+				new Object[]{author.getAuthorId()});
+		if(authors!=null){
+			return authors.get(0);
+		}
+		return null;
+	}
+	
+	public List<Author> readAllAuthorsFirstLevelByBook(Book book) throws SQLException{
+		return readAllFirstLevel("select * from tbl_author where authorId IN (select authorId from tbl_book_authors where bookId = ?))",
+				new Object[] { book.getBookId()});
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
 	public List<Author> extractData(ResultSet rs) {
 		List<Author> authors = new ArrayList<Author>();
+		BookDAO bdao = new BookDAO(conn);
 		try {
 			while (rs.next()) {
 				Author a = new Author();
 				a.setAuthorId(rs.getInt("authorId"));
 				a.setAuthorName(rs.getString("authorName"));
-				//a.setBooks(books);
+				a.setBooks(bdao.readAllBooksFirstLevelByAuthor(a));
 				authors.add(a);
 			}
 		} catch (SQLException e) {
@@ -59,6 +92,7 @@ public class AuthorDAO extends BaseDAO{
 		
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<Author> extractDataFirstLevel(ResultSet rs) {
 		List<Author> authors = new ArrayList<Author>();

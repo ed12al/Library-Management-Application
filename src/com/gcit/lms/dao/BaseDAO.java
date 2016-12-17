@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class BaseDAO {
-public static Connection conn = null;
-	
+	public Connection conn = null;
+
 	public BaseDAO(Connection conn){
 		this.conn = conn;
 	}
@@ -59,8 +59,35 @@ public static Connection conn = null;
 		return null;
 	}
 	
-	public <T> List<T> read(String query, Object[] vals) throws SQLException{		
+	public Integer getCount(String query, Object[] vals) throws SQLException{
 		PreparedStatement pstmt = null;
+		try {
+			pstmt = conn.prepareStatement(query);
+			if(vals!=null){
+				int count = 1;
+				for(Object o: vals){
+					pstmt.setObject(count, o);
+					count++;
+				}
+			}
+			ResultSet rs = pstmt.executeQuery();
+			if(rs.next()){
+				return rs.getInt(1);
+			}else{
+				return -1;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally{
+			if(pstmt!=null)	pstmt.close();
+		}
+		return null;
+	}
+	
+	public <T> List<T> readAllWithPageNo(String query, Object[] vals, Integer pageNo, Integer pageSize) throws SQLException{		
+		PreparedStatement pstmt = null;
+		int limit = (pageNo -1) * pageSize;
+		query = query+" LIMIT "+limit+" , "+pageSize;
 		List<T> ts = new ArrayList<>();
 		try {
 			pstmt = conn.prepareStatement(query);
@@ -83,6 +110,7 @@ public static Connection conn = null;
 	
 	public <T>List<T> readAll(String query, Object[] vals) throws SQLException{
 		PreparedStatement pstmt = null;
+		List<T> ts = new ArrayList<>();
 		try {
 			pstmt = conn.prepareStatement(query);
 			if(vals!=null){
@@ -93,19 +121,20 @@ public static Connection conn = null;
 				}
 			}
 			ResultSet rs = pstmt.executeQuery();
-			return extractData(rs);
+			ts = extractData(rs);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally{
 			if(pstmt!=null) pstmt.close();
 		}
-		return null;
+		return ts;
 	}
 
 	public abstract <T>List<T> extractData(ResultSet rs);
 	
 	public <T>List<T> readAllFirstLevel(String query, Object[] vals) throws SQLException{
 		PreparedStatement pstmt = null;
+		List<T> ts = new ArrayList<>();
 		try {
 			pstmt = conn.prepareStatement(query);
 			if(vals!=null){
@@ -116,13 +145,37 @@ public static Connection conn = null;
 				}
 			}
 			ResultSet rs = pstmt.executeQuery();
-			return extractDataFirstLevel(rs);
+			ts = extractDataFirstLevel(rs);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally{
 			if(pstmt!=null) pstmt.close();
 		}
-		return null;
+		return ts;
+	}
+	
+	public <T>List<T> readAllFirstLevelWithPageNo(String query, Object[] vals, Integer pageNo, Integer pageSize) throws SQLException{
+		PreparedStatement pstmt = null;
+		int limit = (pageNo -1) * pageSize;
+		query = query+" LIMIT "+limit+" , "+pageSize;
+		List<T> ts = new ArrayList<>();
+		try {
+			pstmt = conn.prepareStatement(query);
+			if(vals!=null){
+				int count=1;
+				for(Object o: vals){
+					pstmt.setObject(count, o);
+					count++;
+				}
+			}
+			ResultSet rs = pstmt.executeQuery();
+			ts = extractDataFirstLevel(rs);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally{
+			if(pstmt!=null) pstmt.close();
+		}
+		return ts;
 	}
 
 	public abstract <T>List<T> extractDataFirstLevel(ResultSet rs);
