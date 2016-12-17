@@ -22,6 +22,23 @@ public class BookDAO extends BaseDAO{
 				new Object[] {book.getTitle(), book.getPublisher().getPublisherId()});
 	}
 	
+	public Integer addBookWithID(Book book) throws SQLException{
+		return saveWithID("insert into tbl_book (title, pubId) values (?, ?)", 
+				new Object[] {book.getTitle(), book.getPublisher().getPublisherId()});
+	}
+	
+	public void addBookWithDetails(Book book) throws SQLException {
+		Integer bookId = addBookWithID(book);
+		if(bookId != null && bookId > 0){
+			List<Author> authors = book.getAuthors();
+			if(authors != null){
+				for(Author author: authors){
+					save("insert into tbl_book_authors (authorId, bookId) values (?, ?)", new Object[] { author.getAuthorId(), book.getBookId() });
+				}
+			}
+		}
+	}
+	
 	public void updateBook(Book book) throws SQLException{
 		save("update tbl_book set title = ? where bookId = ?", 
 				new Object[] {book.getTitle(), book.getBookId()});

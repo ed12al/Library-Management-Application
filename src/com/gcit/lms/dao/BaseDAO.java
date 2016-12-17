@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class BaseDAO {
@@ -16,9 +15,7 @@ public abstract class BaseDAO {
 	}
 	
 	public void save(String query, Object[] vals) throws SQLException{
-		PreparedStatement pstmt = null;	
-		try {
-			pstmt = conn.prepareStatement(query);
+		try(PreparedStatement pstmt = conn.prepareStatement(query)){
 			if(vals!=null){
 				int count=1;
 				for(Object o: vals){
@@ -27,17 +24,12 @@ public abstract class BaseDAO {
 				}
 			}
 			pstmt.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally{
-			if(pstmt!=null) pstmt.close();
 		}
 	}
 	
 	public Integer saveWithID(String query, Object[] vals) throws SQLException{
-		PreparedStatement pstmt = null;
-		try {
-			pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+		Integer ID = null;
+		try(PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)){
 			if(vals!=null){
 				int count=1;
 				for(Object o: vals){
@@ -47,22 +39,14 @@ public abstract class BaseDAO {
 			}
 			ResultSet rs = pstmt.executeQuery();
 			if(rs.next()){
-				return rs.getInt(1);
-			}else{
-				return -1;
+				ID = rs.getInt(1);
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally{
-			if(pstmt!=null)	pstmt.close();
+			return ID;
 		}
-		return null;
 	}
 	
 	public Integer getCount(String query, Object[] vals) throws SQLException{
-		PreparedStatement pstmt = null;
-		try {
-			pstmt = conn.prepareStatement(query);
+		try( PreparedStatement pstmt = conn.prepareStatement(query)){
 			if(vals!=null){
 				int count = 1;
 				for(Object o: vals){
@@ -74,23 +58,15 @@ public abstract class BaseDAO {
 			if(rs.next()){
 				return rs.getInt(1);
 			}else{
-				return -1;
+				return null;
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally{
-			if(pstmt!=null)	pstmt.close();
-		}
-		return null;
+		} 
 	}
 	
 	public <T> List<T> readAllWithPageNo(String query, Object[] vals, Integer pageNo, Integer pageSize) throws SQLException{		
-		PreparedStatement pstmt = null;
 		int limit = (pageNo -1) * pageSize;
 		query = query+" LIMIT "+limit+" , "+pageSize;
-		List<T> ts = new ArrayList<>();
-		try {
-			pstmt = conn.prepareStatement(query);
+		try (PreparedStatement pstmt = conn.prepareStatement(query)){
 			if(vals!=null){
 				int count = 1;
 				for(Object o: vals){
@@ -99,20 +75,12 @@ public abstract class BaseDAO {
 				}
 			}
 			ResultSet rs = pstmt.executeQuery();
-			ts = extractData(rs);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally{
-			if(pstmt!=null) pstmt.close();
+			return extractData(rs);
 		}
-		return ts;
 	}
 	
 	public <T>List<T> readAll(String query, Object[] vals) throws SQLException{
-		PreparedStatement pstmt = null;
-		List<T> ts = new ArrayList<>();
-		try {
-			pstmt = conn.prepareStatement(query);
+		try (PreparedStatement pstmt = conn.prepareStatement(query)){
 			if(vals!=null){
 				int count=1;
 				for(Object o: vals){
@@ -121,22 +89,14 @@ public abstract class BaseDAO {
 				}
 			}
 			ResultSet rs = pstmt.executeQuery();
-			ts = extractData(rs);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally{
-			if(pstmt!=null) pstmt.close();
+			return extractData(rs);
 		}
-		return ts;
 	}
 
 	public abstract <T>List<T> extractData(ResultSet rs);
 	
 	public <T>List<T> readAllFirstLevel(String query, Object[] vals) throws SQLException{
-		PreparedStatement pstmt = null;
-		List<T> ts = new ArrayList<>();
-		try {
-			pstmt = conn.prepareStatement(query);
+		try (PreparedStatement pstmt = conn.prepareStatement(query)){
 			if(vals!=null){
 				int count=1;
 				for(Object o: vals){
@@ -145,22 +105,14 @@ public abstract class BaseDAO {
 				}
 			}
 			ResultSet rs = pstmt.executeQuery();
-			ts = extractDataFirstLevel(rs);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally{
-			if(pstmt!=null) pstmt.close();
+			return extractDataFirstLevel(rs);
 		}
-		return ts;
 	}
 	
 	public <T>List<T> readAllFirstLevelWithPageNo(String query, Object[] vals, Integer pageNo, Integer pageSize) throws SQLException{
-		PreparedStatement pstmt = null;
 		int limit = (pageNo -1) * pageSize;
 		query = query+" LIMIT "+limit+" , "+pageSize;
-		List<T> ts = new ArrayList<>();
-		try {
-			pstmt = conn.prepareStatement(query);
+		try (PreparedStatement pstmt = conn.prepareStatement(query)){
 			if(vals!=null){
 				int count=1;
 				for(Object o: vals){
@@ -169,13 +121,8 @@ public abstract class BaseDAO {
 				}
 			}
 			ResultSet rs = pstmt.executeQuery();
-			ts = extractDataFirstLevel(rs);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally{
-			if(pstmt!=null) pstmt.close();
-		}
-		return ts;
+			return extractDataFirstLevel(rs);
+		} 
 	}
 
 	public abstract <T>List<T> extractDataFirstLevel(ResultSet rs);
