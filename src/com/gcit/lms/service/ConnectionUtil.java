@@ -10,7 +10,7 @@ public class ConnectionUtil {
 	private static String user = "root";
 	private static String pass = "Edc12@SQL";
 
-	public static Connection getConnection() throws SQLException, ClassNotFoundException {
+	public static Connection getNewConnection() throws SQLException, ClassNotFoundException {
 		Class.forName(driver);
 		Connection conn = DriverManager.getConnection(url, user, pass);
 		conn.setAutoCommit(Boolean.FALSE);

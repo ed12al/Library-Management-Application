@@ -58,7 +58,7 @@ public abstract class BaseDAO {
 			if(rs.next()){
 				return rs.getInt(1);
 			}else{
-				return null;
+				return 0;
 			}
 		} 
 	}

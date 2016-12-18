@@ -39,12 +39,22 @@ public class AuthorDAO extends BaseDAO{
 		return readAll("select * from tbl_author", null);
 	}
 	
-	public List<Author> readAllAuthorsWithPageNo(Integer pageNo, Integer pageSize) throws SQLException {
-		return readAllWithPageNo("select * from tbl_author", null, pageNo, pageSize);
+	public List<Author> readAllAuthorsWithPageNo(Integer pageNo, Integer pageSize, String q) throws SQLException {
+		if(q==null||q.trim().length()==0){
+			return readAllWithPageNo("select * from tbl_author", null, pageNo, pageSize);
+		}else{
+			q = "%"+q+"%";
+			return readAllWithPageNo("select * from tbl_author where authorName like ?", new Object[]{q}, pageNo, pageSize);
+		}
 	}
 	
-	public Integer getAuthorsCount() throws SQLException{
-		return getCount("select count(*) AS COUNT from tbl_author", null);
+	public Integer getAuthorsCount(String q) throws SQLException{
+		if(q==null||q.trim().length()==0){
+			return getCount("select count(*) AS COUNT from tbl_author", null);
+		}else{
+			q = "%"+q+"%";
+			return getCount("select count(*) AS COUNT from tbl_author where authorName like ?", new Object[]{q});
+		}
 	}
 	
 	public Author readAuthorById(Author author) throws SQLException{
