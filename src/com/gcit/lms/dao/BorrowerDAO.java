@@ -38,12 +38,22 @@ public class BorrowerDAO extends BaseDAO{
 		return readAll("select * from tbl_borrower", null);
 	}
 	
-	public List<Borrower> readAllBorrowersWithPageNo(Integer pageNo, Integer pageSize) throws SQLException {
-		return readAllWithPageNo("select * from tbl_borrower", null, pageNo, pageSize);
+	public List<Borrower> readAllBorrowersWithPageNo(Integer pageNo, Integer pageSize, String q) throws SQLException {
+		if(q==null||q.trim().length()==0){
+			return readAllWithPageNo("select * from tbl_borrower", null, pageNo, pageSize);
+		}else{
+			q = "%"+q+"%";
+			return readAllWithPageNo("select * from tbl_borrower where name like ?", new Object[]{q}, pageNo, pageSize);
+		}
 	}
 	
-	public Integer getBorrowersCount() throws SQLException{
-		return getCount("select count(*) AS COUNT from tbl_borrower", null);
+	public Integer getBorrowersCount(String q) throws SQLException{
+		if(q==null||q.trim().length()==0){
+			return getCount("select count(*) AS COUNT from tbl_borrower", null);
+		}else{
+			q = "%"+q+"%";
+			return getCount("select count(*) AS COUNT from tbl_borrower where name like ?", new Object[]{q});
+		}
 	}
 	
 	public Borrower readBorrowerById(Borrower borrower) throws SQLException{

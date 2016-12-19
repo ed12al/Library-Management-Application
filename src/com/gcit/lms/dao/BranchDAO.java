@@ -38,12 +38,22 @@ public class BranchDAO extends BaseDAO{
 		return readAll("select * from tbl_library_branch", null);
 	}
 	
-	public List<Branch> readAllBranchesWithPageNo(Integer pageNo, Integer pageSize) throws SQLException {
-		return readAllWithPageNo("select * from tbl_library_branch", null, pageNo, pageSize);
+	public List<Branch> readAllBranchesWithPageNo(Integer pageNo, Integer pageSize, String q) throws SQLException {
+		if(q==null||q.trim().length()==0){
+			return readAllWithPageNo("select * from tbl_library_branch", null, pageNo, pageSize);
+		}else{
+			q = "%"+q+"%";
+			return readAllWithPageNo("select * from tbl_library_branch where branchName like ?", new Object[]{q}, pageNo, pageSize);
+		}
 	}
 	
-	public Integer getBranchesCount() throws SQLException{
-		return getCount("select count(*) AS COUNT from tbl_library_branch", null);
+	public Integer getBranchesCount(String q) throws SQLException{
+		if(q==null||q.trim().length()==0){
+			return getCount("select count(*) AS COUNT from tbl_library_branch", null);
+		}else{
+			q = "%"+q+"%";
+			return getCount("select count(*) AS COUNT from tbl_library_branch where branchName like ?", new Object[]{q});
+		}
 	}
 	
 	public Branch readBranchById(Branch branch) throws SQLException{

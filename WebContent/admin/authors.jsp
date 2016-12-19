@@ -2,25 +2,6 @@
 
 <script type="text/javascript">
 $("#authorsTable").onload = viewAuthors();
-$(document).ready(function(){
-	toastr.options = {
-			  "closeButton": false,
-			  "debug": false,
-			  "newestOnTop": true,
-			  "progressBar": false,
-			  "positionClass": "toast-top-right",
-			  "preventDuplicates": false,
-			  "onclick": null,
-			  "showDuration": "300",
-			  "hideDuration": "1000",
-			  "timeOut": "2000",
-			  "extendedTimeOut": "1000",
-			  "showEasing": "swing",
-			  "hideEasing": "linear",
-			  "showMethod": "fadeIn",
-			  "hideMethod": "fadeOut"
-	}
-});
 
 function viewAuthors(pageNumber){
 	$.ajax({
@@ -32,6 +13,18 @@ function viewAuthors(pageNumber){
 		}
 	}).done(function(response) {
 		$("#authorsTable").html(response);
+	});
+}
+
+function viewAuthor(Id){
+	$.ajax({
+		url: "viewAuthor",
+		type: "GET",
+		data: { 
+			authorId: Id
+		}
+	}).done(function(response) {
+		$("#viewAuthorModalBody").html(response);
 	});
 }
 
@@ -125,8 +118,23 @@ function addAuthor(){
 			<input type="text" class="form-control" placeholder="Author Name"
 				aria-describedby="basic-addon1" name="searchString" id="searchString" onkeyup="viewAuthors(1)">
 		</div>
-		<button class="btn btn-primary" data-toggle='modal' data-target='#addAuthorModal'>Add an new author</button>	
+		<button class="btn btn-primary" data-toggle='modal' data-target='#addAuthorModal'>Add Author</button>	
 		<div id="authorsTable"></div>
+	</div>
+</div>
+
+<div class="modal fade" id="viewAuthorModal" tabindex="-1" role="dialog" aria-labelledby="viewAuthorModalLabel">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+        		<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        		<h4 class="modal-title" id="viewAuthorModalLabel">View Author Detail</h4>
+     		</div>
+     		<div class="modal-body" id="viewAuthorModalBody"></div>
+     		<div class="modal-footer">
+        		<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      		</div>
+		</div>
 	</div>
 </div>
 
@@ -167,10 +175,12 @@ function addAuthor(){
 		<div class="modal-content">
 			<div class="modal-header">
         		<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        		<h4 class="modal-title" id="addAuthorModalLabel">Add an New Author</h4>
+        		<h4 class="modal-title" id="addAuthorModalLabel">Add a New Author</h4>
      		</div>
      		<div class="modal-body" id="addAuthorModalBody">
-     			<span> Enter Author Name: <input type="text" id="addAuthorName"></span>
+     			<div class="form-group">
+     				<label class="control-label">Enter Author Name:</label><input type="text" class="form-control" id="addAuthorName">
+     			</div>
 			</div>
      		<div class="modal-footer">
         		<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

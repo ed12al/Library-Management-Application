@@ -26,7 +26,7 @@ public class PublisherDAO extends BaseDAO{
 	
 	public void updatePublisher(Publisher publisher) throws SQLException {
 		save("update tbl_publisher set publisherName = ?, publisherAddress = ?, publisherPhone = ? where publisherId = ?",
-				new Object[] { publisher.getPublisherName(), publisher.getPublisherAddress(), publisher.getPublisherId() });
+				new Object[] { publisher.getPublisherName(), publisher.getPublisherAddress(), publisher.getPublisherPhone(), publisher.getPublisherId() });
 	}
 
 	public void deletePublisher(Publisher publisher) throws SQLException {
@@ -38,12 +38,22 @@ public class PublisherDAO extends BaseDAO{
 		return readAll("select * from tbl_publisher", null);
 	}
 	
-	public List<Publisher> readAllPublishersWithPageNo(Integer pageNo, Integer pageSize) throws SQLException {
-		return readAllWithPageNo("select * from tbl_publisher", null, pageNo, pageSize);
+	public List<Publisher> readAllPublishersWithPageNo(Integer pageNo, Integer pageSize, String q) throws SQLException {
+		if(q==null||q.trim().length()==0){
+			return readAllWithPageNo("select * from tbl_publisher", null, pageNo, pageSize);
+		}else{
+			q = "%"+q+"%";
+			return readAllWithPageNo("select * from tbl_publisher where publisherName like ?", new Object[]{q}, pageNo, pageSize);
+		}
 	}
 	
-	public Integer getPublishersCount() throws SQLException{
-		return getCount("select count(*) AS COUNT from tbl_publisher", null);
+	public Integer getPublishersCount(String q) throws SQLException{
+		if(q==null||q.trim().length()==0){
+			return getCount("select count(*) AS COUNT from tbl_publisher", null);
+		}else{
+			q = "%"+q+"%";
+			return getCount("select count(*) AS COUNT from tbl_publisher where publisherName like ?", new Object[]{q});
+		}
 	}
 	
 	public Publisher readPublisherById(Publisher publisher) throws SQLException{
@@ -106,5 +116,4 @@ public class PublisherDAO extends BaseDAO{
 		}
 		return publishers;
 	}
-
 }
