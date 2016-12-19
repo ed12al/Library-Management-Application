@@ -61,7 +61,7 @@ public class AuthorDAO extends BaseDAO{
 		List<Author> authors =  readAll(
 				"select * from tbl_author where authorId = ?", 
 				new Object[]{author.getAuthorId()});
-		if(authors!=null){
+		if(authors!=null && authors.size()!=0){
 			return authors.get(0);
 		}
 		return null;
@@ -71,14 +71,14 @@ public class AuthorDAO extends BaseDAO{
 		List<Author> authors =  readAllFirstLevel(
 				"select * from tbl_author where authorId = ?", 
 				new Object[]{author.getAuthorId()});
-		if(authors!=null){
+		if(authors!=null && authors.size()!=0){
 			return authors.get(0);
 		}
 		return null;
 	}
 	
 	public List<Author> readAllAuthorsFirstLevelByBook(Book book) throws SQLException{
-		return readAllFirstLevel("select * from tbl_author where authorId IN (select authorId from tbl_book_authors where bookId = ?))",
+		return readAllFirstLevel("select * from tbl_author where authorId IN (select authorId from tbl_book_authors where bookId = ?)",
 				new Object[] { book.getBookId()});
 	}
 	

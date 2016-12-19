@@ -5,10 +5,12 @@ import java.sql.SQLException;
 import java.util.List;
 
 import com.gcit.lms.dao.AuthorDAO;
+import com.gcit.lms.dao.BookDAO;
 import com.gcit.lms.dao.BorrowerDAO;
 import com.gcit.lms.dao.BranchDAO;
 import com.gcit.lms.dao.PublisherDAO;
 import com.gcit.lms.entity.Author;
+import com.gcit.lms.entity.Book;
 import com.gcit.lms.entity.Borrower;
 import com.gcit.lms.entity.Branch;
 import com.gcit.lms.entity.Publisher;
@@ -334,4 +336,78 @@ public class AdminService {
 			}
 		}
 	}
+	
+/* * * * * * * * * * * * * * * * * * admin book * * * * * * * * * * * * * * * * * * */
+	public void addBook(Book book) throws SQLException, ClassNotFoundException {
+		try (Connection conn = ConnectionUtil.getNewConnection()){
+			try {
+				BookDAO bookDao = new BookDAO(conn);
+				bookDao.addBookWithDetails(book);
+				conn.commit();
+			} catch (SQLException e){
+				conn.rollback();
+				throw e;
+			}
+		} 
+	}
+	
+	public void editBook(Book book) throws SQLException, ClassNotFoundException {
+		try (Connection conn = ConnectionUtil.getNewConnection()){
+			try {
+				BookDAO bookDao = new BookDAO(conn);
+				bookDao.updateBookWithDetails(book);
+				conn.commit();
+			} catch (SQLException e){
+				conn.rollback();
+				throw e;
+			}
+		} 
+	}
+	
+	public void deleteBook(Book book) throws SQLException, ClassNotFoundException {
+		try (Connection conn = ConnectionUtil.getNewConnection()){
+			try {
+				BookDAO bookDao = new BookDAO(conn);
+				bookDao.deleteBook(book);
+				conn.commit();
+			} catch (SQLException e){
+				conn.rollback();
+				throw e;
+			}
+		} 
+	}
+
+	public Book readBookById(Book book) throws SQLException, ClassNotFoundException {
+		try (Connection conn = ConnectionUtil.getNewConnection()){
+			try {
+				BookDAO bookDao = new BookDAO(conn);
+				return bookDao.readBookById(book);
+			} catch (SQLException e){
+				throw e;
+			}
+		} 
+	}
+	
+	public List<Book> readAllBooksWithPageNo(Integer pageNo, Integer pageSize, String q) throws SQLException, ClassNotFoundException {
+		try (Connection conn = ConnectionUtil.getNewConnection()){
+			try {
+				BookDAO bookDao = new BookDAO(conn);
+				return bookDao.readAllBooksWithPageNo(pageNo, pageSize, q);
+			} catch (SQLException e){
+				throw e;
+			}
+		} 
+	}
+
+	public Integer getBooksCount(String q) throws ClassNotFoundException, SQLException {
+		try (Connection conn = ConnectionUtil.getNewConnection()){
+			try {
+				BookDAO bookDao = new BookDAO(conn);
+				return bookDao.getBooksCount(q);
+			} catch (SQLException e){
+				throw e;
+			}
+		}
+	}
+
 }

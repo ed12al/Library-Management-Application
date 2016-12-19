@@ -51,7 +51,7 @@ public class GenreDAO extends BaseDAO{
 		List<Genre> genres =  readAll(
 				"select * from tbl_genre where genreId = ?", 
 				new Object[]{genre.getGenreId()});
-		if(genres!=null){
+		if(genres!=null && genres.size()!=0){
 			return genres.get(0);
 		}
 		return null;
@@ -61,7 +61,7 @@ public class GenreDAO extends BaseDAO{
 		List<Genre> genres =  readAllFirstLevel(
 				"select * from tbl_genre where genreId = ?", 
 				new Object[]{genre.getGenreId()});
-		if(genres!=null){
+		if(genres!=null && genres.size()!=0){
 			return genres.get(0);
 		}
 		return null;

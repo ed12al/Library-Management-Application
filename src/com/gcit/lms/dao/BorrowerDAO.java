@@ -60,7 +60,7 @@ public class BorrowerDAO extends BaseDAO{
 		List<Borrower> borrowers =  readAll(
 				"select * from tbl_borrower where cardNo = ?", 
 				new Object[]{borrower.getCardNo()});
-		if(borrowers!=null){
+		if(borrowers!=null && borrowers.size()!=0){
 			return borrowers.get(0);
 		}
 		return null;
@@ -70,7 +70,7 @@ public class BorrowerDAO extends BaseDAO{
 		List<Borrower> borrowers =  readAllFirstLevel(
 				"select * from tbl_borrower where cardNo = ?", 
 				new Object[]{borrower.getCardNo()});
-		if(borrowers!=null){
+		if(borrowers!=null && borrowers.size()!=0){
 			return borrowers.get(0);
 		}
 		return null;

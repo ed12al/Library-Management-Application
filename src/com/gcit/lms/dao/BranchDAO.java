@@ -60,7 +60,7 @@ public class BranchDAO extends BaseDAO{
 		List<Branch> branches =  readAll(
 				"select * from tbl_library_branch where branchId = ?", 
 				new Object[]{ branch.getBranchId() });
-		if(branches!=null){
+		if(branches!=null && branches.size()!=0){
 			return branches.get(0);
 		}
 		return null;
@@ -70,7 +70,7 @@ public class BranchDAO extends BaseDAO{
 		List<Branch> branches =  readAllFirstLevel(
 				"select * from tbl_library_branch where branchId = ?", 
 				new Object[]{ branch.getBranchId() });
-		if(branches!=null){
+		if(branches!=null && branches.size()!=0){
 			return branches.get(0);
 		}
 		return null;

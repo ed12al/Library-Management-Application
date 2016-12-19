@@ -57,20 +57,26 @@ public class PublisherDAO extends BaseDAO{
 	}
 	
 	public Publisher readPublisherById(Publisher publisher) throws SQLException{
+		if(publisher.getPublisherId() == 0){
+			return null;
+		}
 		List<Publisher> publishers =  readAll(
 				"select * from tbl_publisher where publisherId = ?", 
 				new Object[]{ publisher.getPublisherId() });
-		if(publishers!=null){
+		if(publishers!=null && publishers.size()!=0){
 			return publishers.get(0);
 		}
 		return null;
 	}
 	
 	public Publisher readPublisherFirstLevelById(Publisher publisher) throws SQLException{
+		if(publisher.getPublisherId() == 0){
+			return null;
+		}
 		List<Publisher> publishers =  readAllFirstLevel(
 				"select * from tbl_publisher where publisherId = ?", 
 				new Object[]{ publisher.getPublisherId() });
-		if(publishers!=null){
+		if(publishers!=null && publishers.size()!=0){
 			return publishers.get(0);
 		}
 		return null;

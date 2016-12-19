@@ -37,9 +37,10 @@ public abstract class BaseDAO {
 					count++;
 				}
 			}
-			ResultSet rs = pstmt.executeQuery();
-			if(rs.next()){
-				ID = rs.getInt(1);
+			pstmt.executeUpdate();
+			ResultSet keys = pstmt.getGeneratedKeys();  
+			if(keys != null && keys.next()){
+				ID = keys.getInt(1);
 			}
 			return ID;
 		}

@@ -11,8 +11,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.gcit.lms.entity.Author;
+import com.gcit.lms.entity.Book;
 import com.gcit.lms.entity.Borrower;
 import com.gcit.lms.entity.Branch;
+import com.gcit.lms.entity.Genre;
 import com.gcit.lms.entity.Publisher;
 import com.gcit.lms.service.AdminService;
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
@@ -20,7 +22,8 @@ import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationExceptio
 @WebServlet({"/admin/viewAuthors", "/admin/viewAuthor", "/admin/editAuthor", "/admin/deleteAuthor", "/admin/addAuthor",
 	"/admin/viewPublishers", "/admin/viewPublisher", "/admin/editPublisher", "/admin/deletePublisher", "/admin/addPublisher",
 	"/admin/viewBranches", "/admin/viewBranch", "/admin/editBranch", "/admin/deleteBranch", "/admin/addBranch",
-	"/admin/viewBorrowers", "/admin/viewBorrower", "/admin/editBorrower", "/admin/deleteBorrower", "/admin/addBorrower"})
+	"/admin/viewBorrowers", "/admin/viewBorrower", "/admin/editBorrower", "/admin/deleteBorrower", "/admin/addBorrower",
+	"/admin/viewBooks", "/admin/viewBook", "/admin/editBook", "/admin/deleteBook", "/admin/addBook"})
 public class AdminServlet extends HttpServlet{
 	private static final long serialVersionUID = 1L;
 	private static final AdminService adminService = new AdminService();
@@ -81,10 +84,168 @@ public class AdminServlet extends HttpServlet{
 		case "/admin/deleteBorrower":
 			deleteBorrower(request, response);
 			break;
+		case "/admin/viewBooks":
+			viewBooks(request, response);
+			break;
+		case "/admin/viewBook":
+			viewBook(request, response);
+			break;
+		case "/admin/editBook":
+			editBook(request, response);
+			break;
+		case "/admin/deleteBook":
+			deleteBook(request, response);
+			break;
 		default:
 			break;
 		}
 	}
+/* * * * * * * * * * * * * * * * * * GET: admin borrower * * * * * * * * * * * * * * * * * * */	
+	private void deleteBook(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String bookIdStr = request.getParameter("bookId");
+		try {
+			Book book = new Book();
+			book.setBookId(Integer.parseInt(bookIdStr));
+			book = adminService.readBookById(book);
+			StringBuilder sb = new StringBuilder();
+			sb.append("<span> Are you sure that you want to delete ");
+			sb.append(book.getTitle());
+			sb.append(" from the database?</span><br /><span><input type='hidden' id='deleteBookId' value='");
+			sb.append(book.getBookId());
+			sb.append("'> </span>");
+			response.getWriter().append(sb.toString());
+		} catch (ClassNotFoundException | SQLException | NumberFormatException |NullPointerException e) {
+			e.printStackTrace();
+		}	
+	}
+	
+	private void viewBook(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String bookIdStr = request.getParameter("bookId");
+		try {
+			Book book = new Book();
+			book.setBookId(Integer.parseInt(bookIdStr));
+			book = adminService.readBookById(book);
+			StringBuilder sb = new StringBuilder();
+			sb.append("<div class='form-group'><label class='control-label'>Book ID:</label><p class='form-control-static'>");
+			sb.append(book.getBookId());
+			sb.append("</p></div><div class='form-group'><label class='control-label'>Title:</label><p class='form-control-static'>");
+			sb.append(book.getTitle());
+			sb.append("</p></div><div class='form-group'><label class='control-label'>Publisher:</label><p class='form-control-static'>");
+			if(book.getPublisher() != null && book.getPublisher().getPublisherName() != null) sb.append(book.getPublisher().getPublisherName());
+			sb.append("</p></div><div class='form-group'><label class='control-label'>Genres:</label>");
+			if(book.getGenres().size() != 0){
+				for(Genre genre : book.getGenres()){
+					sb.append("<p class='form-control-static'>");
+					sb.append(genre.getGenreName());
+					sb.append("</p>");
+				}
+			}else{
+				sb.append("<p class='form-control-static'></p>");
+			}
+			sb.append("</div><div class='form-group'><label class='control-label'>Authors:</label>");
+			if(book.getAuthors().size() != 0){
+				for(Author author : book.getAuthors()){
+					sb.append("<p class='form-control-static'>");
+					sb.append(author.getAuthorName());
+					sb.append("</p>");
+				}
+			}else{
+				sb.append("<p class='form-control-static'></p>");
+			}
+			sb.append("</div>");
+			response.getWriter().append(sb.toString());
+		} catch (ClassNotFoundException | SQLException | NumberFormatException | NullPointerException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void editBook(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String bookIdStr = request.getParameter("bookId");
+		try {
+			Book book = new Book();
+			book.setBookId(Integer.parseInt(bookIdStr));
+			book = adminService.readBookById(book);
+			StringBuilder sb = new StringBuilder();
+			sb.append("<div class='form-group'><label class='control-label'>Enter Title to Edit:</label><input class='form-control' type='text' id='editBookName' value='");
+			sb.append(book.getTitle());
+			/*
+			 * add publisher, genres, authors
+			 */
+			sb.append("'></div><input type='hidden' id='editBookId' value='");
+			sb.append(book.getBookId());
+			sb.append("'>");
+			response.getWriter().append(sb.toString());
+		} catch (ClassNotFoundException | SQLException | NumberFormatException | NullPointerException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void viewBooks(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String q = request.getParameter("searchString");
+		try {
+			String pageNoStr = request.getParameter("pageNo");
+			Integer pageNo = null;
+			if(pageNoStr == null){
+				pageNo = 1;
+			}else{
+				pageNo = Integer.parseInt(pageNoStr);
+			}
+			List<Book> books = adminService.readAllBooksWithPageNo(pageNo, pageSize, q);
+			Integer count = adminService.getBooksCount(q);
+			Integer pages = (count + pageSize - 1)/pageSize;
+			StringBuilder sb = new StringBuilder();
+			sb.append("<nav aria-label='Page navigation'><ul class='pagination'><li");
+			if(pageNo < 2) sb.append(" class='disabled'");
+			sb.append("><a href='#' aria-label='Previous'");
+			if(pageNo > 1) {
+				sb.append(" onclick='viewBooks(");
+				sb.append(pageNo-1);
+				sb.append(")'");
+			}
+			sb.append("> <span aria-hidden='true'>&laquo;</span></a></li>");
+			for (int i = 1; i <= pages; i++) {
+				sb.append("<li");
+				if(pageNo == i) {
+					sb.append(" class='disabled'><a href='#'>");
+				}else{
+					sb.append("><a href='#' onclick='viewBooks(");
+					sb.append(i);
+					sb.append(")'>");
+				}
+				sb.append(i);
+				sb.append("</a></li>");	
+			}
+			sb.append("<li");
+			if(pageNo >= pages) sb.append(" class='disabled'");
+			sb.append("><a href='#' aria-label='Next'");
+			if(pageNo < pages) {
+				sb.append(" onclick='viewBooks(");
+				sb.append(pageNo+1);
+				sb.append(")'");
+			}
+			sb.append("> <span aria-hidden='true'>&raquo;</span></a></li></ul></nav><table class='table'>");
+			sb.append("<tr><th>#</th><th>Book Name</th><th>View Detail</th><th>Edit Book</th><th>Delete Book</th></tr>");
+			int index = 1+(pageNo-1)*10;
+			for (Book a : books) {
+				sb.append("<tr><td>");
+				sb.append(index++);
+				sb.append("</td><td>");
+				sb.append(a.getTitle());
+				sb.append("</td><td><button class='btn btn-info' data-toggle='modal' data-target='#viewBookModal' onclick='viewBook(");
+				sb.append(a.getBookId());
+				sb.append(")'>View</button></td><td><button class='btn btn-success' data-toggle='modal' data-target='#editBookModal' onclick='editBook(");
+				sb.append(a.getBookId());
+				sb.append(")'>Edit</button></td><td><button class='btn btn-danger' data-toggle='modal' data-target='#deleteBookModal' onclick='deleteBook(");
+				sb.append(a.getBookId());
+				sb.append(")'>Delete</button></td>");
+			}
+			sb.append("</table>");
+			response.getWriter().append(sb.toString());
+		} catch (ClassNotFoundException | SQLException | NumberFormatException e) {
+			e.printStackTrace();
+		}
+	}
+	
 /* * * * * * * * * * * * * * * * * * GET: admin borrower * * * * * * * * * * * * * * * * * * */
 	private void deleteBorrower(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String borrowerIdStr = request.getParameter("borrowerId");
@@ -116,11 +277,9 @@ public class AdminServlet extends HttpServlet{
 			sb.append("</p></div><div class='form-group'><label class='control-label'>Borrower Name:</label><p class='form-control-static'>");
 			sb.append(borrower.getName());
 			sb.append("</p></div><div class='form-group'><label class='control-label'>Borrower Address:</label><p class='form-control-static'>");
-			String address = borrower.getAddress();
-			if(address != null) sb.append(address);
+			if(borrower.getAddress() != null) sb.append(borrower.getAddress());
 			sb.append("</p></div><div class='form-group'><label class='control-label'>Borrower Phone:</label><p class='form-control-static'>");
-			String phone = borrower.getPhone();
-			if(phone != null) sb.append(phone);
+			if(borrower.getPhone() != null) sb.append(borrower.getPhone());
 			sb.append("</p></div>");
 			response.getWriter().append(sb.toString());
 		} catch (ClassNotFoundException | SQLException | NumberFormatException | NullPointerException e) {
@@ -138,11 +297,9 @@ public class AdminServlet extends HttpServlet{
 			sb.append("<div class='form-group'><label class='control-label'>Enter Borrower Name to Edit:</label><input class='form-control' type='text' id='editBorrowerName' value='");
 			sb.append(borrower.getName());
 			sb.append("'></div><div class='form-group'><label class='control-label'>Enter Borrower Address to Edit:</label><input class='form-control' type='text' id='editBorrowerAddress' value='");
-			String address = borrower.getAddress();
-			if(address != null) sb.append(address);
+			if(borrower.getAddress() != null) sb.append(borrower.getAddress());
 			sb.append("'></div><div class='form-group'><label class='control-label'>Enter Borrower Phone to Edit:</label><input class='form-control' type='text' id='editBorrowerPhone' value='");
-			String phone = borrower.getPhone();
-			if(phone != null) sb.append(phone);
+			if(borrower.getPhone() != null) sb.append(borrower.getPhone());
 			sb.append("'></div><input type='hidden' id='editCardNo' value='");
 			sb.append(borrower.getCardNo());
 			sb.append("'>");
@@ -248,8 +405,7 @@ public class AdminServlet extends HttpServlet{
 			sb.append("</p></div><div class='form-group'><label class='control-label'>Branch Name:</label><p class='form-control-static'>");
 			sb.append(branch.getBranchName());
 			sb.append("</p></div><div class='form-group'><label class='control-label'>Branch Address:</label><p class='form-control-static'>");
-			String address = branch.getBranchAddress();
-			if(address != null) sb.append(address);
+			if(branch.getBranchAddress() != null) sb.append(branch.getBranchAddress());
 			sb.append("</p></div>");
 			response.getWriter().append(sb.toString());
 		} catch (ClassNotFoundException | SQLException | NumberFormatException | NullPointerException e) {
@@ -267,8 +423,7 @@ public class AdminServlet extends HttpServlet{
 			sb.append("<div class='form-group'><label class='control-label'>Enter Branch Name to Edit:</label><input class='form-control' type='text' id='editBranchName' value='");
 			sb.append(branch.getBranchName());
 			sb.append("'></div><div class='form-group'><label class='control-label'>Enter Branch Address to Edit:</label><input class='form-control' type='text' id='editBranchAddress' value='");
-			String address = branch.getBranchAddress();
-			if(address != null) sb.append(address);
+			if(branch.getBranchAddress() != null) sb.append(branch.getBranchAddress());
 			sb.append("'></div><input type='hidden' id='editBranchId' value='");
 			sb.append(branch.getBranchId());
 			sb.append("'>");
@@ -374,11 +529,9 @@ public class AdminServlet extends HttpServlet{
 			sb.append("</p></div><div class='form-group'><label class='control-label'>Publisher Name:</label><p class='form-control-static'>");
 			sb.append(publisher.getPublisherName());
 			sb.append("</p></div><div class='form-group'><label class='control-label'>Publisher Address:</label><p class='form-control-static'>");
-			String address = publisher.getPublisherAddress();
-			if(address != null) sb.append(address);
+			if(publisher.getPublisherAddress() != null) sb.append(publisher.getPublisherAddress());
 			sb.append("</p></div><div class='form-group'><label class='control-label'>Publisher Phone:</label><p class='form-control-static'>");
-			String phone = publisher.getPublisherPhone();
-			if(phone != null) sb.append(phone);
+			if(publisher.getPublisherPhone() != null) sb.append(publisher.getPublisherPhone());
 			sb.append("</p></div>");
 			response.getWriter().append(sb.toString());
 		} catch (ClassNotFoundException | SQLException | NumberFormatException | NullPointerException e) {
@@ -396,11 +549,9 @@ public class AdminServlet extends HttpServlet{
 			sb.append("<div class='form-group'><label class='control-label'>Enter Publisher Name to Edit:</label><input class='form-control' type='text' id='editPublisherName' value='");
 			sb.append(publisher.getPublisherName());
 			sb.append("'></div><div class='form-group'><label class='control-label'>Enter Publisher Address to Edit:</label><input class='form-control' type='text' id='editPublisherAddress' value='");
-			String address = publisher.getPublisherAddress();
-			if(address != null) sb.append(address);
+			if(publisher.getPublisherAddress() != null) sb.append(publisher.getPublisherAddress());
 			sb.append("'></div><div class='form-group'><label class='control-label'>Enter Publisher Phone to Edit:</label><input class='form-control' type='text' id='editPublisherPhone' value='");
-			String phone = publisher.getPublisherPhone();
-			if(phone != null) sb.append(phone);
+			if(publisher.getPublisherPhone() != null) sb.append(publisher.getPublisherPhone());
 			sb.append("'></div><input type='hidden' id='editPublisherId' value='");
 			sb.append(publisher.getPublisherId());
 			sb.append("'>");
@@ -735,9 +886,76 @@ public class AdminServlet extends HttpServlet{
 				e.printStackTrace();
 			}
 			break;
+		case "/admin/editBook":
+			try {
+				updateBook(request, response);
+				//response.setStatus(200);
+			} catch (MySQLIntegrityConstraintViolationException | NumberFormatException | NullPointerException e) {
+				response.sendError(400);
+				e.printStackTrace();
+			} catch (ClassNotFoundException | SQLException e) {
+				e.printStackTrace();
+			}
+			break;
+		case "/admin/deleteBook":
+			try {
+				removeBook(request, response);
+				//response.setStatus(200);
+			} catch (NumberFormatException | NullPointerException e) {
+				response.sendError(400);
+				e.printStackTrace();
+			} catch (ClassNotFoundException | SQLException e) {
+				e.printStackTrace();
+			}
+			break;
+		case "/admin/addBook":
+			try {
+				addBook(request, response);
+				//response.setStatus(200);
+			} catch (MySQLIntegrityConstraintViolationException | NumberFormatException | NullPointerException e) {
+				response.sendError(400);
+				e.printStackTrace();
+			} catch (ClassNotFoundException | SQLException e) {
+				e.printStackTrace();
+			}
+			break;
 		default:
 			break;
 		}
+	}
+/* * * * * * * * * * * * * * * * * * POST: admin book * * * * * * * * * * * * * * * * * * */
+	private void addBook(HttpServletRequest request, HttpServletResponse response)
+			throws ClassNotFoundException, SQLException, NumberFormatException, NullPointerException{
+		String bookName = request.getParameter("bookName").trim();
+		/*
+		 * add publisher, genres, authors
+		 */
+		if(bookName.length() == 0) throw new NullPointerException("Book name cannot be empty");
+		Book book = new Book();
+		book.setTitle(bookName);
+		adminService.addBook(book);
+	}
+
+	private void removeBook(HttpServletRequest request, HttpServletResponse response)
+			throws ClassNotFoundException, SQLException, NumberFormatException, NullPointerException{
+		String bookIdStr = request.getParameter("bookId");
+		Book book = new Book();
+		book.setBookId(Integer.parseInt(bookIdStr));
+		adminService.deleteBook(book);
+	}
+
+	private void updateBook(HttpServletRequest request, HttpServletResponse response) 
+			throws ClassNotFoundException, SQLException, NumberFormatException, NullPointerException{
+		String bookIdStr = request.getParameter("bookId");
+		String bookName = request.getParameter("bookName").trim();
+		/*
+		 * add publisher, genres, authors
+		 */
+		if(bookName.length() == 0) throw new NullPointerException("Book name cannot be empty");
+		Book book = new Book();
+		book.setBookId(Integer.parseInt(bookIdStr));
+		book.setTitle(bookName);
+		adminService.editBook(book);
 	}
 /* * * * * * * * * * * * * * * * * * * POST: admin borrower * * * * * * * * * * * * * * * * * * */
 	private void addBorrower(HttpServletRequest request, HttpServletResponse response)

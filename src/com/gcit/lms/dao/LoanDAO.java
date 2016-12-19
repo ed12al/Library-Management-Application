@@ -57,7 +57,7 @@ public class LoanDAO extends BaseDAO{
 		List<Loan> loans =  readAll(
 				"select * from tbl_book_loans where loanId = ?", 
 				new Object[]{loan.getLoanId()});
-		if(loans!=null){
+		if(loans!=null && loans.size()!=0){
 			return loans.get(0);
 		}
 		return null;
@@ -67,7 +67,7 @@ public class LoanDAO extends BaseDAO{
 		List<Loan> loans =  readAllFirstLevel(
 				"select * from tbl_book_loans where loanId = ?", 
 				new Object[]{loan.getLoanId()});
-		if(loans!=null){
+		if(loans!=null && loans.size()!=0){
 			return loans.get(0);
 		}
 		return null;
