@@ -31,21 +31,25 @@ public class BookDAO extends BaseDAO{
 	
 	public void addBookWithDetails(Book book) throws SQLException {
 		Integer bookId = addBookWithID(book);
+		book.setBookId(bookId);
 		if(bookId != null && bookId > 0){
 			addAllAuthorsByBook(book);
+			addAllGenresByBook(book);
 		}
 	}
 	
 	public void updateBook(Book book) throws SQLException{
 		Integer pubId = book.getPublisher() == null ? null : book.getPublisher().getPublisherId();
 		save("update tbl_book set title = ?, pubId = ? where bookId = ?", 
-				new Object[] {book.getTitle(), pubId});
+				new Object[] {book.getTitle(), pubId, book.getBookId()});
 	}
 	
 	public void updateBookWithDetails(Book book) throws SQLException {
 		updateBook(book);
 		deleteAllAuthorsByBook(book);
 		addAllAuthorsByBook(book);
+		deleteAllGenresByBook(book);
+		addAllGenresByBook(book);
 	}
 	
 	private void addAllAuthorsByBook(Book book) throws SQLException {
@@ -56,8 +60,20 @@ public class BookDAO extends BaseDAO{
 		}
 	}
 	
+	private void addAllGenresByBook(Book book) throws SQLException {
+		if(book.getGenres() != null){
+			for(Genre genre: book.getGenres()){
+				save("insert into tbl_book_genres (genreId, bookId) values (?, ?)", new Object[] { genre.getGenreId(), book.getBookId() });
+			}
+		}
+	}
+	
 	private void deleteAllAuthorsByBook(Book book) throws SQLException {
 		save("delete from tbl_book_authors where bookId = ? ", new Object[]{ book.getBookId() });
+	}
+	
+	private void deleteAllGenresByBook(Book book) throws SQLException {
+		save("delete from tbl_book_genres where bookId = ? ", new Object[]{ book.getBookId() });
 	}
 
 	public void deleteBook(Book book) throws SQLException{
@@ -67,6 +83,10 @@ public class BookDAO extends BaseDAO{
 	
 	public List<Book> readAllBooks() throws SQLException{
 		return readAll("select * from tbl_book", null);
+	}
+	
+	public List<Book> readAllBooksFirstLevel() throws SQLException{
+		return readAllFirstLevel("select * from tbl_book", null);
 	}
 	
 	public List<Book> readAllBooksWithPageNo(Integer pageNo, Integer pageSize, String q) throws SQLException {

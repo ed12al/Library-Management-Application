@@ -86,7 +86,9 @@ function removeAuthor(){
 		}
 	});
 }
-
+function getAddAuthor(){
+	$("#addAuthorName").val("");
+}
 function addAuthor(){
 	$.ajax({
 		url: "addAuthor",
@@ -97,9 +99,6 @@ function addAuthor(){
 		success: function(response){
 			toastr["success"]("Successfully added the author");
 			viewAuthors(1);
-		},
-		complete: function(xhr,status){
-			$("#addAuthorName").val("");
 		},
 		data: {
 			authorName: $("#addAuthorName").val()
@@ -118,7 +117,7 @@ function addAuthor(){
 			<input type="text" class="form-control" placeholder="Author Name"
 				aria-describedby="basic-addon1" name="searchString" id="searchString" onkeyup="viewAuthors(1)">
 		</div>
-		<button class="btn btn-primary" data-toggle='modal' data-target='#addAuthorModal'>Add Author</button>	
+		<button class="btn btn-primary" data-toggle='modal' data-target='#addAuthorModal' onclick='getAddAuthor()'>Add Author</button>	
 		<div id="authorsTable"></div>
 	</div>
 </div>

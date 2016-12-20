@@ -38,6 +38,10 @@ public class PublisherDAO extends BaseDAO{
 		return readAll("select * from tbl_publisher", null);
 	}
 	
+	public List<Publisher> readAllPublishersFirstLevel() throws SQLException {
+		return readAllFirstLevel("select * from tbl_publisher", null);
+	}
+	
 	public List<Publisher> readAllPublishersWithPageNo(Integer pageNo, Integer pageSize, String q) throws SQLException {
 		if(q==null||q.trim().length()==0){
 			return readAllWithPageNo("select * from tbl_publisher", null, pageNo, pageSize);

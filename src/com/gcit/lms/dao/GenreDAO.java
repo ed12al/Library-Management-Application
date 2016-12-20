@@ -39,6 +39,10 @@ public class GenreDAO extends BaseDAO{
 		return readAll("select * from tbl_genre", null);
 	}
 	
+	public List<Genre> readAllGenresFirstLevel() throws SQLException {
+		return readAllFirstLevel("select * from tbl_genre", null);
+	}
+	
 	public List<Genre> readAllGenresWithPageNo(Integer pageNo, Integer pageSize) throws SQLException {
 		return readAllWithPageNo("select * from tbl_genre", null, pageNo, pageSize);
 	}

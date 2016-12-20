@@ -65,7 +65,6 @@ public class Branch implements Serializable{
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((branchId == null) ? 0 : branchId.hashCode());
-		result = prime * result + ((branchName == null) ? 0 : branchName.hashCode());
 		return result;
 	}
 	/* (non-Javadoc)
@@ -84,11 +83,6 @@ public class Branch implements Serializable{
 			if (other.branchId != null)
 				return false;
 		} else if (!branchId.equals(other.branchId))
-			return false;
-		if (branchName == null) {
-			if (other.branchName != null)
-				return false;
-		} else if (!branchName.equals(other.branchName))
 			return false;
 		return true;
 	}

@@ -39,6 +39,10 @@ public class AuthorDAO extends BaseDAO{
 		return readAll("select * from tbl_author", null);
 	}
 	
+	public List<Author> readAllAuthorsFirstLevel() throws SQLException {
+		return readAllFirstLevel("select * from tbl_author", null);
+	}
+	
 	public List<Author> readAllAuthorsWithPageNo(Integer pageNo, Integer pageSize, String q) throws SQLException {
 		if(q==null||q.trim().length()==0){
 			return readAllWithPageNo("select * from tbl_author", null, pageNo, pageSize);

@@ -89,6 +89,12 @@ function removeBorrower(){
 	});
 }
 
+function getAddBorrower(){
+	$("#addBorrowerName").val("");
+	$('#addBorrowerPhone').val("");
+	$('#addBorrowerAddress').val("");
+}
+
 function addBorrower(){
 	$.ajax({
 		url: "addBorrower",
@@ -99,11 +105,6 @@ function addBorrower(){
 		success: function(response){
 			toastr["success"]("Successfully added the borrower");
 			viewBorrowers(1);
-		},
-		complete: function(xhr,status){
-			$("#addBorrowerName").val("");
-			$('#addBorrowerPhone').val("");
-			$('#addBorrowerAddress').val("");
 		},
 		data: {
 			borrowerName: $("#addBorrowerName").val(),
@@ -124,7 +125,7 @@ function addBorrower(){
 			<input type="text" class="form-control" placeholder="Borrower Name"
 				aria-describedby="basic-addon1" name="searchString" id="searchString" onkeyup="viewBorrowers(1)">	
 		</div>
-		<button class="btn btn-primary" data-toggle='modal' data-target='#addBorrowerModal'>Add Borrower</button>
+		<button class="btn btn-primary" data-toggle='modal' data-target='#addBorrowerModal' onclick='getAddBorrower()'>Add Borrower</button>
 		<div id="borrowersTable"></div>
 	</div>
 </div>

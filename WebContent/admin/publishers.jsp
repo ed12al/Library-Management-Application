@@ -89,6 +89,12 @@ function removePublisher(){
 	});
 }
 
+function getAddPublisher(){
+	$("#addPublisherName").val("");
+	$('#addPublisherPhone').val("");
+	$('#addPublisherAddress').val("");
+}
+
 function addPublisher(){
 	$.ajax({
 		url: "addPublisher",
@@ -99,11 +105,6 @@ function addPublisher(){
 		success: function(response){
 			toastr["success"]("Successfully added the publisher");
 			viewPublishers(1);
-		},
-		complete: function(xhr,status){
-			$("#addPublisherName").val("");
-			$('#addPublisherPhone').val("");
-			$('#addPublisherAddress').val("");
 		},
 		data: {
 			publisherName: $("#addPublisherName").val(),
@@ -124,7 +125,7 @@ function addPublisher(){
 			<input type="text" class="form-control" placeholder="Publisher Name"
 				aria-describedby="basic-addon1" name="searchString" id="searchString" onkeyup="viewPublishers(1)">	
 		</div>
-		<button class="btn btn-primary" data-toggle='modal' data-target='#addPublisherModal'>Add Publisher</button>
+		<button class="btn btn-primary" data-toggle='modal' data-target='#addPublisherModal' onclick='getAddPublisher()'>Add Publisher</button>
 		<div id="publishersTable"></div>
 	</div>
 </div>

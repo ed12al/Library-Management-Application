@@ -2,7 +2,12 @@ package com.gcit.lms.web;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -12,21 +17,29 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.gcit.lms.entity.Author;
 import com.gcit.lms.entity.Book;
+import com.gcit.lms.entity.BookCopy;
 import com.gcit.lms.entity.Borrower;
 import com.gcit.lms.entity.Branch;
 import com.gcit.lms.entity.Genre;
 import com.gcit.lms.entity.Publisher;
 import com.gcit.lms.service.AdminService;
+import com.gcit.lms.service.LibrarianService;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 
 @WebServlet({"/admin/viewAuthors", "/admin/viewAuthor", "/admin/editAuthor", "/admin/deleteAuthor", "/admin/addAuthor",
 	"/admin/viewPublishers", "/admin/viewPublisher", "/admin/editPublisher", "/admin/deletePublisher", "/admin/addPublisher",
 	"/admin/viewBranches", "/admin/viewBranch", "/admin/editBranch", "/admin/deleteBranch", "/admin/addBranch",
 	"/admin/viewBorrowers", "/admin/viewBorrower", "/admin/editBorrower", "/admin/deleteBorrower", "/admin/addBorrower",
-	"/admin/viewBooks", "/admin/viewBook", "/admin/editBook", "/admin/deleteBook", "/admin/addBook"})
+	"/admin/viewBooks", "/admin/viewBook", "/admin/editBook", "/admin/deleteBook", "/admin/addBook", "/admin/addGenre",
+	"/librarian/viewBranches", "/librarian/editBranchBooks", "/librarian/editBranch"})
 public class AdminServlet extends HttpServlet{
 	private static final long serialVersionUID = 1L;
 	private static final AdminService adminService = new AdminService();
+	private static final LibrarianService libService = new LibrarianService();
 	private static final Integer pageSize = 10;
 
 	/**
@@ -96,11 +109,168 @@ public class AdminServlet extends HttpServlet{
 		case "/admin/deleteBook":
 			deleteBook(request, response);
 			break;
+		case "/admin/addBook":
+			getAddBook(request, response);
+			break;
+		case "/librarian/viewBranches":
+			viewLibrarianBranches(request, response);
+			break;
+		case "/librarian/editBranch":
+			editBranch(request, response);
+			break;
+		case "/librarian/editBranchBooks":
+			viewBranchBooks(request, response);
+			break;
 		default:
 			break;
 		}
 	}
-/* * * * * * * * * * * * * * * * * * GET: admin borrower * * * * * * * * * * * * * * * * * * */	
+
+/* * * * * * * * * * * * * * * * * * GET: librarian * * * * * * * * * * * * * * * * * * */	
+	private void viewBranchBooks(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		try{
+			Branch branch = new Branch();
+			branch.setBranchId(Integer.parseInt(request.getParameter("branchId")));
+			branch = libService.readBranchById(branch);
+			Map<Book, Integer> bookCopies = new HashMap<>();
+			if(branch.getBookCopy() != null){
+				for(BookCopy copy: branch.getBookCopy()){
+					bookCopies.put(copy.getBook(), copy.getNoOfCopies());
+				}
+			}
+			StringBuilder sb = new StringBuilder();
+			sb.append("<div class='form-group'><label class='control-label'>");
+			sb.append(branch.getBranchName());
+			sb.append("</label></div>");
+			for(Book book : libService.readAllBooksFirstLevel()){
+				sb.append("<div class='form-group'><label class='control-label'>");
+				sb.append(book.getTitle());
+				sb.append("</label><input type='text' class='bookCopy form-control' id='");
+				sb.append(book.getBookId());
+				sb.append("' value='");
+				sb.append(bookCopies.getOrDefault(book, 0));
+				sb.append("'></div>");
+			}
+			sb.append("<input type='hidden' id='editBranchBookId' value='");
+			sb.append(branch.getBranchId());
+			sb.append("'>");
+			response.getWriter().append(sb.toString());
+		} catch (ClassNotFoundException | SQLException | NumberFormatException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	private void viewLibrarianBranches(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String q = request.getParameter("searchString");
+		try {
+			String pageNoStr = request.getParameter("pageNo");
+			Integer pageNo = null;
+			if(pageNoStr == null){
+				pageNo = 1;
+			}else{
+				pageNo = Integer.parseInt(pageNoStr);
+			}
+			List<Branch> branches = adminService.readAllBranchesWithPageNo(pageNo, pageSize, q);
+			Integer count = adminService.getBranchesCount(q);
+			Integer pages = (count + pageSize - 1)/pageSize;
+			StringBuilder sb = new StringBuilder();
+			sb.append("<nav aria-label='Page navigation'><ul class='pagination'><li");
+			if(pageNo < 2) sb.append(" class='disabled'");
+			sb.append("><a href='#' aria-label='Previous'");
+			if(pageNo > 1) {
+				sb.append(" onclick='viewBranches(");
+				sb.append(pageNo-1);
+				sb.append(")'");
+			}
+			sb.append("> <span aria-hidden='true'>&laquo;</span></a></li>");
+			for (int i = 1; i <= pages; i++) {
+				sb.append("<li");
+				if(pageNo == i) {
+					sb.append(" class='disabled'><a href='#'>");
+				}else{
+					sb.append("><a href='#' onclick='viewBranches(");
+					sb.append(i);
+					sb.append(")'>");
+				}
+				sb.append(i);
+				sb.append("</a></li>");	
+			}
+			sb.append("<li");
+			if(pageNo >= pages) sb.append(" class='disabled'");
+			sb.append("><a href='#' aria-label='Next'");
+			if(pageNo < pages) {
+				sb.append(" onclick='viewBranches(");
+				sb.append(pageNo+1);
+				sb.append(")'");
+			}
+			sb.append("> <span aria-hidden='true'>&raquo;</span></a></li></ul></nav><table class='table'>");
+			sb.append("<tr><th>#</th><th>Branch Name</th><th>View Detail</th><th>Edit Branch</th></tr>");
+			int index = 1+(pageNo-1)*10;
+			for (Branch a : branches) {
+				sb.append("<tr><td>");
+				sb.append(index++);
+				sb.append("</td><td>");
+				sb.append(a.getBranchName());
+				sb.append("</td><td><button class='btn btn-info' data-toggle='modal' data-target='#viewBranchModal' onclick='viewBranch(");
+				sb.append(a.getBranchId());
+				sb.append(")'>View</button></td><td><button class='btn btn-success' data-toggle='modal' data-target='#editBranchModal' onclick='editBranch(");
+				sb.append(a.getBranchId());
+				sb.append(")'>Edit</button></td>");
+			}
+			sb.append("</table>");
+			response.getWriter().append(sb.toString());
+		} catch (ClassNotFoundException | SQLException | NumberFormatException e) {
+			e.printStackTrace();
+		}
+	}
+
+
+
+/* * * * * * * * * * * * * * * * * * GET: admin book * * * * * * * * * * * * * * * * * * */	
+	private void getAddBook(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		try {
+			List<Publisher> publishers = adminService.readAllPublishersFirstLevel();
+			List<Genre> genres = adminService.readAllGenresFirstLevel();
+			List<Author> authors = adminService.readAllAuthorsFirstLevel();
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append("<div class='form-group'><label class='control-label'>Enter Title:</label><input type='text' class='form-control' id='addBookName'></div>");
+			sb.append("<div class='form-group' id='addPickPublisher'><label class='control-label'>Pick a Publisher:</label>");
+			for(Publisher publisher: publishers){
+				sb.append("<label class='radio-inline'><input type='radio' id='addPublisherId' name='addPublisherId' value='");
+				sb.append(publisher.getPublisherId());
+				sb.append("'>");
+				sb.append(publisher.getPublisherName());
+				sb.append("</label>");
+			}
+			sb.append("</div><div class='form-group'><label class='control-label'>Add a New Publisher</label><input class='form-control' type='text' id='addNewPublisherName' placeholder='Publisher Name'>");
+			sb.append("<input class='form-control' type='text' id='addNewPublisherAddress' placeholder='Publiser Address'><input class='form-control' type='text' id='addNewPublisherPhone' placeholder='Publiser Phone'>");
+			sb.append("<button type='button' class='btn btn-primary' onclick='updateBookPublisher(1)'>Add Publisher</button></div><div class='form-group' id='addPickGenres'><label class='control-label'>Pick Genres:</label>");
+			for(Genre genre: genres){
+				sb.append("<label class='checkbox-inline'><input type='checkbox' id='addGenreId' name='addGenreId' value='");
+				sb.append(genre.getGenreId());
+				sb.append("'>");
+				sb.append(genre.getGenreName());
+				sb.append("</label>");
+			}
+			sb.append("</div><div class='form-group'><label class='control-label'>Add a New Genre</label><input class='form-control' type='text' id='addNewGenreName' placeholder='Genre Name'>");
+			sb.append("<button type='button' class='btn btn-primary' onclick='updateBookGenres(1)'>Add Genre</button></div><div class='form-group' id='addPickAuthors'><label class='control-label'>Pick Authors:</label>");
+			for(Author author: authors){
+				sb.append("<label class='checkbox-inline'><input type='checkbox' id='addAuthorId' name='addAuthorId' value='");
+				sb.append(author.getAuthorId());
+				sb.append("'>");
+				sb.append(author.getAuthorName());
+				sb.append("</label>");
+			}
+			sb.append("</div><div class='form-group'><label class='control-label'>Add a New Author</label><input class='form-control' type='text' id='addNewAuthorName' placeholder='Author Name'>");
+			sb.append("<button type='button' class='btn btn-primary' onclick='updateBookAuthors(1)'>Add Author</button></div>");
+			response.getWriter().append(sb.toString());
+		} catch (ClassNotFoundException | SQLException e) {
+			e.printStackTrace();
+		}
+		
+	}
+
 	private void deleteBook(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String bookIdStr = request.getParameter("bookId");
 		try {
@@ -120,8 +290,8 @@ public class AdminServlet extends HttpServlet{
 	}
 	
 	private void viewBook(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		String bookIdStr = request.getParameter("bookId");
 		try {
+			String bookIdStr = request.getParameter("bookId");
 			Book book = new Book();
 			book.setBookId(Integer.parseInt(bookIdStr));
 			book = adminService.readBookById(book);
@@ -160,18 +330,67 @@ public class AdminServlet extends HttpServlet{
 	}
 
 	private void editBook(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		String bookIdStr = request.getParameter("bookId");
 		try {
-			Book book = new Book();
-			book.setBookId(Integer.parseInt(bookIdStr));
-			book = adminService.readBookById(book);
+			List<Publisher> allPublishers = adminService.readAllPublishersFirstLevel();
+			List<Genre> allGenres = adminService.readAllGenresFirstLevel();
+			List<Author> allAuthors = adminService.readAllAuthorsFirstLevel();
+			
 			StringBuilder sb = new StringBuilder();
-			sb.append("<div class='form-group'><label class='control-label'>Enter Title to Edit:</label><input class='form-control' type='text' id='editBookName' value='");
+			Book book = new Book();
+			book.setBookId(Integer.parseInt(request.getParameter("bookId")));
+			book = adminService.readBookById(book);
+			
+			Set<Genre> bookGenres = new HashSet<Genre>();
+			bookGenres.addAll(book.getGenres());
+			Set<Author> bookAuthors = new HashSet<Author>();
+			bookAuthors.addAll(book.getAuthors());
+			
+			sb.append("<div class='form-group'><label class='control-label'>Enter Title to Edit:</label><input type='text' class='form-control' id='editBookName' value='");
 			sb.append(book.getTitle());
-			/*
-			 * add publisher, genres, authors
-			 */
-			sb.append("'></div><input type='hidden' id='editBookId' value='");
+			sb.append("'></div>");
+			sb.append("<div class='form-group' id='addPickPublisher'><label class='control-label'>Pick a Publisher:</label>");
+			for(Publisher publisher: allPublishers){
+				sb.append("<label class='radio-inline'><input type='radio' id='editPublisherId' name='editPublisherId' value='");
+				sb.append(publisher.getPublisherId());
+				if(publisher.equals(book.getPublisher())){
+					sb.append("' checked='checked'>");
+				}else{
+					sb.append("'>");
+				}
+				sb.append(publisher.getPublisherName());
+				sb.append("</label>");
+			}
+			sb.append("</div><div class='form-group'><label class='control-label'>Add a New Publisher</label><input class='form-control' type='text' id='addNewPublisherName' placeholder='Publisher Name'>");
+			sb.append("<input class='form-control' type='text' id='addNewPublisherAddress' placeholder='Publiser Address'><input class='form-control' type='text' id='addNewPublisherPhone' placeholder='Publiser Phone'>");
+			sb.append("<button type='button' class='btn btn-primary' onclick='updateBookPublisher(1)'>Add Publisher</button></div><div class='form-group' id='addPickGenres'><label class='control-label'>Pick Genres:</label>");
+			for(Genre genre: allGenres){
+				sb.append("<label class='checkbox-inline'><input type='checkbox' id='editGenreId' name='editGenreId' value='");
+				sb.append(genre.getGenreId());
+				if(bookGenres.contains(genre)){
+					sb.append("' checked='checked'>");
+				}else{
+					sb.append("'>");
+				}
+				sb.append(genre.getGenreName());
+				sb.append("</label>");
+			}
+			sb.append("</div><div class='form-group'><label class='control-label'>Add a New Genre</label><input class='form-control' type='text' id='addNewGenreName' placeholder='Genre Name'>");
+			sb.append("<button type='button' class='btn btn-primary' onclick='updateBookGenres(1)'>Add Genre</button></div><div class='form-group' id='addPickAuthors'><label class='control-label'>Pick Authors:</label>");
+			for(Author author: allAuthors){
+				sb.append("<label class='checkbox-inline'><input type='checkbox' id='editAuthorId' name='editAuthorId' value='");
+				sb.append(author.getAuthorId());
+				if(bookAuthors.contains(author)){
+					sb.append("' checked='checked'>");
+				}else{
+					sb.append("'>");
+				}
+				sb.append(author.getAuthorName());
+				sb.append("</label>");
+			}
+			sb.append("</div><div class='form-group'><label class='control-label'>Add a New Author</label><input class='form-control' type='text' id='addNewAuthorName' placeholder='Author Name'>");
+			sb.append("<button type='button' class='btn btn-primary' onclick='updateBookAuthors(1)'>Add Author</button></div>");
+			
+			sb.append("<input type='hidden' id='editBookId' value='");
 			sb.append(book.getBookId());
 			sb.append("'>");
 			response.getWriter().append(sb.toString());
@@ -181,8 +400,8 @@ public class AdminServlet extends HttpServlet{
 	}
 	
 	private void viewBooks(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		String q = request.getParameter("searchString");
 		try {
+			String q = request.getParameter("searchString");
 			String pageNoStr = request.getParameter("pageNo");
 			Integer pageNo = null;
 			if(pageNoStr == null){
@@ -762,6 +981,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -773,6 +993,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -784,6 +1005,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -795,6 +1017,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -806,6 +1029,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -817,6 +1041,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -828,6 +1053,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -839,6 +1065,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -850,6 +1077,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -861,6 +1089,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -872,6 +1101,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -883,6 +1113,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -894,6 +1125,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -905,6 +1137,7 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -916,6 +1149,43 @@ public class AdminServlet extends HttpServlet{
 				response.sendError(400);
 				e.printStackTrace();
 			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
+				e.printStackTrace();
+			}
+			break;
+		case "/admin/addGenre":
+			try {
+				addGenre(request, response);
+				//response.setStatus(200);
+			} catch (MySQLIntegrityConstraintViolationException | NumberFormatException | NullPointerException e) {
+				response.sendError(400);
+				e.printStackTrace();
+			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
+				e.printStackTrace();
+			}
+			break;
+		case "/librarian/editBranch":
+			try {
+				updateBranch(request, response);
+				//response.setStatus(200);
+			} catch (MySQLIntegrityConstraintViolationException | NumberFormatException | NullPointerException e) {
+				response.sendError(400);
+				e.printStackTrace();
+			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
+				e.printStackTrace();
+			}
+			break;
+		case "/librarian/editBranchBooks":	
+			try {
+				editBranchBooks(request, response);
+				//response.setStatus(200);
+			} catch (MySQLIntegrityConstraintViolationException | NumberFormatException | NullPointerException e) {
+				response.sendError(400);
+				e.printStackTrace();
+			} catch (ClassNotFoundException | SQLException e) {
+				response.sendError(500);
 				e.printStackTrace();
 			}
 			break;
@@ -923,16 +1193,69 @@ public class AdminServlet extends HttpServlet{
 			break;
 		}
 	}
+	
+
+/* * * * * * * * * * * * * * * * * * POST: librarian * * * * * * * * * * * * * * * * * * */	
+	private void editBranchBooks(HttpServletRequest request, HttpServletResponse response) 
+			throws ClassNotFoundException, SQLException, NumberFormatException, NullPointerException, IOException{
+		Branch branch = new Branch();
+		branch.setBranchId(Integer.parseInt(request.getParameter("branchId")));
+		String bookCopies = request.getParameter("bookCopies");
+		System.out.println(bookCopies);
+		try{
+			Gson gson = new Gson();
+			String jsonString = gson.toJson(bookCopies);
+			JsonParser parser = new JsonParser();
+			JsonElement myElement = parser.parse(jsonString);
+		} catch (Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+/* * * * * * * * * * * * * * * * * * POST: admin genre * * * * * * * * * * * * * * * * * * */
+	private void addGenre(HttpServletRequest request, HttpServletResponse response)
+			throws ClassNotFoundException, SQLException, NumberFormatException, NullPointerException, IOException{
+		String genreName = request.getParameter("genreName").trim();
+		if(genreName.length() == 0) throw new NullPointerException("Genre name cannot be empty");
+		Genre genre = new Genre();
+		genre.setGenreName(genreName);
+		Integer ID = adminService.addGenreWithId(genre);
+		if(ID != null) response.getWriter().append(ID.toString());
+	}
+
 /* * * * * * * * * * * * * * * * * * POST: admin book * * * * * * * * * * * * * * * * * * */
 	private void addBook(HttpServletRequest request, HttpServletResponse response)
 			throws ClassNotFoundException, SQLException, NumberFormatException, NullPointerException{
-		String bookName = request.getParameter("bookName").trim();
-		/*
-		 * add publisher, genres, authors
-		 */
-		if(bookName.length() == 0) throw new NullPointerException("Book name cannot be empty");
 		Book book = new Book();
+		String bookName = request.getParameter("bookName").trim();
+		if(bookName.length() == 0) throw new NullPointerException("Book name cannot be empty");
 		book.setTitle(bookName);
+		String publisherIdStr = request.getParameter("publisherId");
+		if(publisherIdStr != null){
+			Publisher publisher = new Publisher();
+			publisher.setPublisherId(Integer.parseInt(publisherIdStr));
+			book.setPublisher(publisher);
+		}
+		String[] genreIdsStr = request.getParameterValues("genreIds[]");
+		if(genreIdsStr != null){
+			List<Genre> genres = new ArrayList<>();
+			for(String str: genreIdsStr){
+				Genre genre = new Genre();
+				genre.setGenreId(Integer.parseInt(str));
+				genres.add(genre);
+			}
+			book.setGenres(genres);
+		}
+		String[] authorIdsStr = request.getParameterValues("authorIds[]");
+		if(authorIdsStr != null){
+			List<Author> authors = new ArrayList<>();
+			for(String str: authorIdsStr){
+				Author author = new Author();
+				author.setAuthorId(Integer.parseInt(str));
+				authors.add(author);
+			}
+			book.setAuthors(authors);
+		}
 		adminService.addBook(book);
 	}
 
@@ -946,15 +1269,37 @@ public class AdminServlet extends HttpServlet{
 
 	private void updateBook(HttpServletRequest request, HttpServletResponse response) 
 			throws ClassNotFoundException, SQLException, NumberFormatException, NullPointerException{
-		String bookIdStr = request.getParameter("bookId");
-		String bookName = request.getParameter("bookName").trim();
-		/*
-		 * add publisher, genres, authors
-		 */
-		if(bookName.length() == 0) throw new NullPointerException("Book name cannot be empty");
 		Book book = new Book();
-		book.setBookId(Integer.parseInt(bookIdStr));
+		book.setBookId(Integer.parseInt(request.getParameter("bookId")));
+		String bookName = request.getParameter("bookName").trim();
+		if(bookName.length() == 0) throw new NullPointerException("Book name cannot be empty");
 		book.setTitle(bookName);
+		String publisherIdStr = request.getParameter("publisherId");
+		if(publisherIdStr != null){
+			Publisher publisher = new Publisher();
+			publisher.setPublisherId(Integer.parseInt(publisherIdStr));
+			book.setPublisher(publisher);
+		}
+		String[] genreIdsStr = request.getParameterValues("genreIds[]");
+		if(genreIdsStr != null){
+			List<Genre> genres = new ArrayList<>();
+			for(String str: genreIdsStr){
+				Genre genre = new Genre();
+				genre.setGenreId(Integer.parseInt(str));
+				genres.add(genre);
+			}
+			book.setGenres(genres);
+		}
+		String[] authorIdsStr = request.getParameterValues("authorIds[]");
+		if(authorIdsStr != null){
+			List<Author> authors = new ArrayList<>();
+			for(String str: authorIdsStr){
+				Author author = new Author();
+				author.setAuthorId(Integer.parseInt(str));
+				authors.add(author);
+			}
+			book.setAuthors(authors);
+		}
 		adminService.editBook(book);
 	}
 /* * * * * * * * * * * * * * * * * * * POST: admin borrower * * * * * * * * * * * * * * * * * * */
@@ -1031,7 +1376,7 @@ public class AdminServlet extends HttpServlet{
 	}
 /* * * * * * * * * * * * * * * * * * * POST: admin publisher * * * * * * * * * * * * * * * * * * */
 	private void addPublisher(HttpServletRequest request, HttpServletResponse response)
-			throws ClassNotFoundException, SQLException, NumberFormatException, NullPointerException {
+			throws ClassNotFoundException, SQLException, NumberFormatException, NullPointerException, IOException {
 		String publisherName = request.getParameter("publisherName").trim();
 		String publisherAddress = request.getParameter("publisherAddress").trim();
 		String publisherPhone = request.getParameter("publisherPhone").trim();
@@ -1041,7 +1386,8 @@ public class AdminServlet extends HttpServlet{
 		publisher.setPublisherName(publisherName);
 		publisher.setPublisherAddress(publisherAddress.length() == 0 ? null : publisherAddress);
 		publisher.setPublisherPhone(publisherPhone.length() == 0 ? null : publisherPhone);
-		adminService.addPublisher(publisher);
+		Integer ID = adminService.addPublisherWithId(publisher);
+		if(ID != null) response.getWriter().append(ID.toString());
 	}
 
 	private void removePublisher(HttpServletRequest request, HttpServletResponse response)
@@ -1070,12 +1416,13 @@ public class AdminServlet extends HttpServlet{
 	
 /* * * * * * * * * * * * * * * * * * POST: admin author * * * * * * * * * * * * * * * * * * */
 	private void addAuthor(HttpServletRequest request, HttpServletResponse response)
-			throws ClassNotFoundException, SQLException, NumberFormatException, NullPointerException{
+			throws ClassNotFoundException, SQLException, NumberFormatException, NullPointerException, IOException{
 		String authorName = request.getParameter("authorName").trim();
 		if(authorName.length() == 0) throw new NullPointerException("Author name cannot be empty");
 		Author author = new Author();
 		author.setAuthorName(authorName);
-		adminService.addAuthor(author);
+		Integer ID = adminService.addAuthorWithId(author);
+		if(ID != null) response.getWriter().append(ID.toString());
 	}
 
 	private void removeAuthor(HttpServletRequest request, HttpServletResponse response)

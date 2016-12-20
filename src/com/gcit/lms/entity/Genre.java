@@ -52,7 +52,6 @@ public class Genre implements Serializable{
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((genreId == null) ? 0 : genreId.hashCode());
-		result = prime * result + ((genreName == null) ? 0 : genreName.hashCode());
 		return result;
 	}
 	/* (non-Javadoc)
@@ -71,11 +70,6 @@ public class Genre implements Serializable{
 			if (other.genreId != null)
 				return false;
 		} else if (!genreId.equals(other.genreId))
-			return false;
-		if (genreName == null) {
-			if (other.genreName != null)
-				return false;
-		} else if (!genreName.equals(other.genreName))
 			return false;
 		return true;
 	}

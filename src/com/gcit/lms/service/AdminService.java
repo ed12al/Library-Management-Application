@@ -8,41 +8,16 @@ import com.gcit.lms.dao.AuthorDAO;
 import com.gcit.lms.dao.BookDAO;
 import com.gcit.lms.dao.BorrowerDAO;
 import com.gcit.lms.dao.BranchDAO;
+import com.gcit.lms.dao.GenreDAO;
 import com.gcit.lms.dao.PublisherDAO;
 import com.gcit.lms.entity.Author;
 import com.gcit.lms.entity.Book;
 import com.gcit.lms.entity.Borrower;
 import com.gcit.lms.entity.Branch;
+import com.gcit.lms.entity.Genre;
 import com.gcit.lms.entity.Publisher;
 
 public class AdminService {
-	/*  template
-	// write
-	public void write(Object o) throws SQLException, ClassNotFoundException {
-		try (Connection conn = ConnectionUtil.getNewConnection()){
-			try {
-				//
-				//
-				conn.commit();
-			} catch (SQLException e){
-				conn.rollback();
-				throw e;
-			}
-		} 
-	}
-	
-	// read
-	public List<Book> read() throws SQLException, ClassNotFoundException {
-		try (Connection conn = ConnectionUtil.getNewConnection()){
-			try {
-				BookDAO bookDao = new BookDAO(conn);
-				return bookDao.readAllBooks();
-			} catch (SQLException e){
-				throw e;
-			}
-		} 
-	}
-	*/
 
 /* * * * * * * * * * * * * * * * * * admin author * * * * * * * * * * * * * * * * * * */
 	public void addAuthor(Author author) throws SQLException, ClassNotFoundException {
@@ -51,6 +26,20 @@ public class AdminService {
 				AuthorDAO authorDao = new AuthorDAO(conn);
 				authorDao.addAuthor(author);
 				conn.commit();
+			} catch (SQLException e){
+				conn.rollback();
+				throw e;
+			}
+		} 
+	}
+	
+	public Integer addAuthorWithId(Author author) throws SQLException, ClassNotFoundException {
+		try (Connection conn = ConnectionUtil.getNewConnection()){
+			try {
+				AuthorDAO authorDao = new AuthorDAO(conn);
+				Integer ID = authorDao.addAuthorWithID(author);
+				conn.commit();
+				return ID;
 			} catch (SQLException e){
 				conn.rollback();
 				throw e;
@@ -106,6 +95,17 @@ public class AdminService {
 		} 
 	}
 
+	public List<Author> readAllAuthorsFirstLevel() throws SQLException, ClassNotFoundException{
+		try (Connection conn = ConnectionUtil.getNewConnection()) {
+			try {
+				AuthorDAO authorDao = new AuthorDAO(conn);
+				return authorDao.readAllAuthorsFirstLevel();
+			} catch (SQLException e) {
+				throw e;
+			}
+		}
+	}
+	
 	public Integer getAuthorsCount(String q) throws ClassNotFoundException, SQLException {
 		try (Connection conn = ConnectionUtil.getNewConnection()){
 			try {
@@ -124,6 +124,20 @@ public class AdminService {
 				PublisherDAO publisherDao = new PublisherDAO(conn);
 				publisherDao.addPublisher(publisher);
 				conn.commit();
+			} catch (SQLException e){
+				conn.rollback();
+				throw e;
+			}
+		} 
+	}
+	
+	public Integer addPublisherWithId(Publisher publisher) throws SQLException, ClassNotFoundException {
+		try (Connection conn = ConnectionUtil.getNewConnection()){
+			try {
+				PublisherDAO publisherDao = new PublisherDAO(conn);
+				Integer ID = publisherDao.addPublisherWithID(publisher);
+				conn.commit();
+				return ID;
 			} catch (SQLException e){
 				conn.rollback();
 				throw e;
@@ -174,6 +188,17 @@ public class AdminService {
 			try {
 				PublisherDAO publisherDao = new PublisherDAO(conn);
 				return publisherDao.readAllPublishersWithPageNo(pageNo, pageSize, q);
+			} catch (SQLException e) {
+				throw e;
+			}
+		}
+	}
+	
+	public List<Publisher> readAllPublishersFirstLevel() throws SQLException, ClassNotFoundException{
+		try (Connection conn = ConnectionUtil.getNewConnection()) {
+			try {
+				PublisherDAO publisherDao = new PublisherDAO(conn);
+				return publisherDao.readAllPublishersFirstLevel();
 			} catch (SQLException e) {
 				throw e;
 			}
@@ -409,5 +434,28 @@ public class AdminService {
 			}
 		}
 	}
-
+/* * * * * * * * * * * * * * * * * * admin genre * * * * * * * * * * * * * * * * * * */
+	public List<Genre> readAllGenresFirstLevel() throws SQLException, ClassNotFoundException{
+		try (Connection conn = ConnectionUtil.getNewConnection()) {
+			try {
+				GenreDAO genreDao = new GenreDAO(conn);
+				return genreDao.readAllGenresFirstLevel();
+			} catch (SQLException e) {
+				throw e;
+			}
+		}
+	}	
+	public Integer addGenreWithId(Genre genre) throws SQLException, ClassNotFoundException {
+		try (Connection conn = ConnectionUtil.getNewConnection()){
+			try {
+				GenreDAO genreDao = new GenreDAO(conn);
+				Integer ID = genreDao.addGenreWithID(genre);
+				conn.commit();
+				return ID;
+			} catch (SQLException e){
+				conn.rollback();
+				throw e;
+			}
+		} 
+	}
 }

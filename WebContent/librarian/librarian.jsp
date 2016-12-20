@@ -18,7 +18,7 @@ function viewBranches(pageNumber){
 
 function viewBranch(Id){
 	$.ajax({
-		url: "viewBranch",
+		url: "editBranchBooks",
 		type: "GET",
 		data: { 
 			branchId: Id
@@ -59,55 +59,30 @@ function updateBranch(){
 	});
 }
 
-function deleteBranch(Id){
-	$.ajax({
-		url:"deleteBranch",
-		type: "GET",
-		data: {
-			branchId: Id
-		}
-	}).done(function(response) {
-		$("#deleteBranchModalBody").html(response);
+function editBranchBooks(){
+	var bookCopies = [];
+	$(".bookCopy").each(function(){
+		if($(this).val() != "0") bookCopies.push({id: $(this).attr('id'), copy: $(this).val()});
 	});
-}
-
-function removeBranch(){
+	bookCopies = JSON.stringify(bookCopies);
 	$.ajax({
-		url: "deleteBranch",
+		url: "editBranchBooks",
 		type: "POST",
+		dataType: "JSON",
 		error: function (xhr,status,error) {
 			toastr["error"](error);
 	    },
 		success: function(response){
-			toastr["success"]("Successfully deleted the branch");
+			toastr["success"]("Successfully edited the book copy");
 			viewBranches(1);
 		},
-		data: {
-			branchId: $("#deleteBranchId").val()
-		}
-	});
-}
-
-function getAddBranch(){
-	$("#addBranchName").val("");
-	$('#addBranchAddress').val("");
-}
-
-function addBranch(){
-	$.ajax({
-		url: "addBranch",
-		type: "POST",
-		error: function (xhr,status,error){
-			toastr["error"](error);
-		},
-		success: function(response){
-			toastr["success"]("Successfully added the branch");
-			viewBranches(1);
+		beforeSend: function(xhr){
+			console.log(bookCopies);
 		},
 		data: {
-			branchName: $("#addBranchName").val(),
-			branchAddress: $('#addBranchAddress').val()
-		}
+			branchId: $('#editBranchBookId').val(),
+			bookCopies: bookCopies
+		}		
 	})
 }
 
@@ -117,12 +92,11 @@ function addBranch(){
 	<div class="jumbotron">
 		<h1>GCIT Library Management System</h1>
 		<p>Welcome to GCIT Library Management System. Have Fun Shopping!</p>
-		<h3>Hello Administrator! What do you want to do?</h3>
+		<h3>Hello Librarian! What do you want to do?</h3>
 		<div class="input-group">
 			<input type="text" class="form-control" placeholder="Branch Name"
 				aria-describedby="basic-addon1" name="searchString" id="searchString" onkeyup="viewBranches(1)">	
 		</div>
-		<button class="btn btn-primary" data-toggle='modal' data-target='#addBranchModal' onclick='getAddBranch()'>Add Branch</button>
 		<div id="branchesTable"></div>
 	</div>
 </div>
@@ -137,6 +111,7 @@ function addBranch(){
      		<div class="modal-body" id="viewBranchModalBody"></div>
      		<div class="modal-footer">
         		<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        		<button type="button" class="btn btn-primary" data-dismiss="modal" onclick="editBranchBooks()">Save</button>
       		</div>
 		</div>
 	</div>
@@ -153,45 +128,6 @@ function addBranch(){
      		<div class="modal-footer">
         		<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         		<button type="button" class="btn btn-primary" data-dismiss="modal" onclick="updateBranch()">Save</button>
-      		</div>
-		</div>
-	</div>
-</div>
-
-<div class="modal fade" id="deleteBranchModal" tabindex="-1" role="dialog" aria-labelledby="deleteBranchModalLabel">
-	<div class="modal-dialog modal-lg" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-        		<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        		<h4 class="modal-title" id="deleteBranchModalLabel">Delete Branch</h4>
-     		</div>
-     		<div class="modal-body" id="deleteBranchModalBody"></div>
-     		<div class="modal-footer">
-        		<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        		<button type="button" class="btn btn-primary" data-dismiss="modal" onclick="removeBranch()">Delete</button>
-      		</div>
-		</div>
-	</div>
-</div>
-
-<div class="modal fade" id="addBranchModal" tabindex="-1" role="dialog" aria-labelledby="addBranchModalLabel">
-	<div class="modal-dialog modal-lg" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-        		<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        		<h4 class="modal-title" id="addBranchModalLabel">Add an New Branch</h4>
-     		</div>
-     		<div class="modal-body" id="addBranchModalBody">
-     			<div class="form-group">
-     				<label class="control-label">Enter Branch Name:</label><input type="text" class="form-control" id="addBranchName">
-     			</div>
-     			<div class="form-group">
-     				<label class="control-label">Enter Branch Address:</label><input type="text" class="form-control" id="addBranchAddress">
-     			</div>
-			</div>
-     		<div class="modal-footer">
-        		<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        		<button type="button" class="btn btn-primary" data-dismiss="modal" onclick="addBranch()">Add</button>
       		</div>
 		</div>
 	</div>

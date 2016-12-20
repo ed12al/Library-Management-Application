@@ -78,7 +78,6 @@ public class Publisher implements Serializable{
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((publisherId == null) ? 0 : publisherId.hashCode());
-		result = prime * result + ((publisherName == null) ? 0 : publisherName.hashCode());
 		return result;
 	}
 	/* (non-Javadoc)
@@ -97,11 +96,6 @@ public class Publisher implements Serializable{
 			if (other.publisherId != null)
 				return false;
 		} else if (!publisherId.equals(other.publisherId))
-			return false;
-		if (publisherName == null) {
-			if (other.publisherName != null)
-				return false;
-		} else if (!publisherName.equals(other.publisherName))
 			return false;
 		return true;
 	}

@@ -78,7 +78,6 @@ public class Book implements Serializable{
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((bookId == null) ? 0 : bookId.hashCode());
-		result = prime * result + ((title == null) ? 0 : title.hashCode());
 		return result;
 	}
 	/* (non-Javadoc)
@@ -97,11 +96,6 @@ public class Book implements Serializable{
 			if (other.bookId != null)
 				return false;
 		} else if (!bookId.equals(other.bookId))
-			return false;
-		if (title == null) {
-			if (other.title != null)
-				return false;
-		} else if (!title.equals(other.title))
 			return false;
 		return true;
 	}

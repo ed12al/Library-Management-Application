@@ -52,7 +52,6 @@ public class Author implements Serializable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((authorId == null) ? 0 : authorId.hashCode());
-		result = prime * result + ((authorName == null) ? 0 : authorName.hashCode());
 		return result;
 	}
 	/* (non-Javadoc)
@@ -71,11 +70,6 @@ public class Author implements Serializable {
 			if (other.authorId != null)
 				return false;
 		} else if (!authorId.equals(other.authorId))
-			return false;
-		if (authorName == null) {
-			if (other.authorName != null)
-				return false;
-		} else if (!authorName.equals(other.authorName))
 			return false;
 		return true;
 	}
