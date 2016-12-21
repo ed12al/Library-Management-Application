@@ -3,10 +3,8 @@ package com.gcit.lms.web;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.ServletException;
@@ -17,29 +15,22 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.gcit.lms.entity.Author;
 import com.gcit.lms.entity.Book;
-import com.gcit.lms.entity.BookCopy;
 import com.gcit.lms.entity.Borrower;
 import com.gcit.lms.entity.Branch;
 import com.gcit.lms.entity.Genre;
 import com.gcit.lms.entity.Publisher;
 import com.gcit.lms.service.AdminService;
-import com.gcit.lms.service.LibrarianService;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 
 @WebServlet({"/admin/viewAuthors", "/admin/viewAuthor", "/admin/editAuthor", "/admin/deleteAuthor", "/admin/addAuthor",
 	"/admin/viewPublishers", "/admin/viewPublisher", "/admin/editPublisher", "/admin/deletePublisher", "/admin/addPublisher",
 	"/admin/viewBranches", "/admin/viewBranch", "/admin/editBranch", "/admin/deleteBranch", "/admin/addBranch",
 	"/admin/viewBorrowers", "/admin/viewBorrower", "/admin/editBorrower", "/admin/deleteBorrower", "/admin/addBorrower",
-	"/admin/viewBooks", "/admin/viewBook", "/admin/editBook", "/admin/deleteBook", "/admin/addBook", "/admin/addGenre",
-	"/librarian/viewBranches", "/librarian/editBranchBooks", "/librarian/editBranch"})
+	"/admin/viewBooks", "/admin/viewBook", "/admin/editBook", "/admin/deleteBook", "/admin/addBook", "/admin/addGenre"})
 public class AdminServlet extends HttpServlet{
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = -3071195659871683956L;
 	private static final AdminService adminService = new AdminService();
-	private static final LibrarianService libService = new LibrarianService();
 	private static final Integer pageSize = 10;
 
 	/**
@@ -112,119 +103,10 @@ public class AdminServlet extends HttpServlet{
 		case "/admin/addBook":
 			getAddBook(request, response);
 			break;
-		case "/librarian/viewBranches":
-			viewLibrarianBranches(request, response);
-			break;
-		case "/librarian/editBranch":
-			editBranch(request, response);
-			break;
-		case "/librarian/editBranchBooks":
-			viewBranchBooks(request, response);
-			break;
 		default:
 			break;
 		}
 	}
-
-/* * * * * * * * * * * * * * * * * * GET: librarian * * * * * * * * * * * * * * * * * * */	
-	private void viewBranchBooks(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		try{
-			Branch branch = new Branch();
-			branch.setBranchId(Integer.parseInt(request.getParameter("branchId")));
-			branch = libService.readBranchById(branch);
-			Map<Book, Integer> bookCopies = new HashMap<>();
-			if(branch.getBookCopy() != null){
-				for(BookCopy copy: branch.getBookCopy()){
-					bookCopies.put(copy.getBook(), copy.getNoOfCopies());
-				}
-			}
-			StringBuilder sb = new StringBuilder();
-			sb.append("<div class='form-group'><label class='control-label'>");
-			sb.append(branch.getBranchName());
-			sb.append("</label></div>");
-			for(Book book : libService.readAllBooksFirstLevel()){
-				sb.append("<div class='form-group'><label class='control-label'>");
-				sb.append(book.getTitle());
-				sb.append("</label><input type='text' class='bookCopy form-control' id='");
-				sb.append(book.getBookId());
-				sb.append("' value='");
-				sb.append(bookCopies.getOrDefault(book, 0));
-				sb.append("'></div>");
-			}
-			sb.append("<input type='hidden' id='editBranchBookId' value='");
-			sb.append(branch.getBranchId());
-			sb.append("'>");
-			response.getWriter().append(sb.toString());
-		} catch (ClassNotFoundException | SQLException | NumberFormatException e) {
-			e.printStackTrace();
-		}
-		
-	}
-	private void viewLibrarianBranches(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		String q = request.getParameter("searchString");
-		try {
-			String pageNoStr = request.getParameter("pageNo");
-			Integer pageNo = null;
-			if(pageNoStr == null){
-				pageNo = 1;
-			}else{
-				pageNo = Integer.parseInt(pageNoStr);
-			}
-			List<Branch> branches = adminService.readAllBranchesWithPageNo(pageNo, pageSize, q);
-			Integer count = adminService.getBranchesCount(q);
-			Integer pages = (count + pageSize - 1)/pageSize;
-			StringBuilder sb = new StringBuilder();
-			sb.append("<nav aria-label='Page navigation'><ul class='pagination'><li");
-			if(pageNo < 2) sb.append(" class='disabled'");
-			sb.append("><a href='#' aria-label='Previous'");
-			if(pageNo > 1) {
-				sb.append(" onclick='viewBranches(");
-				sb.append(pageNo-1);
-				sb.append(")'");
-			}
-			sb.append("> <span aria-hidden='true'>&laquo;</span></a></li>");
-			for (int i = 1; i <= pages; i++) {
-				sb.append("<li");
-				if(pageNo == i) {
-					sb.append(" class='disabled'><a href='#'>");
-				}else{
-					sb.append("><a href='#' onclick='viewBranches(");
-					sb.append(i);
-					sb.append(")'>");
-				}
-				sb.append(i);
-				sb.append("</a></li>");	
-			}
-			sb.append("<li");
-			if(pageNo >= pages) sb.append(" class='disabled'");
-			sb.append("><a href='#' aria-label='Next'");
-			if(pageNo < pages) {
-				sb.append(" onclick='viewBranches(");
-				sb.append(pageNo+1);
-				sb.append(")'");
-			}
-			sb.append("> <span aria-hidden='true'>&raquo;</span></a></li></ul></nav><table class='table'>");
-			sb.append("<tr><th>#</th><th>Branch Name</th><th>View Detail</th><th>Edit Branch</th></tr>");
-			int index = 1+(pageNo-1)*10;
-			for (Branch a : branches) {
-				sb.append("<tr><td>");
-				sb.append(index++);
-				sb.append("</td><td>");
-				sb.append(a.getBranchName());
-				sb.append("</td><td><button class='btn btn-info' data-toggle='modal' data-target='#viewBranchModal' onclick='viewBranch(");
-				sb.append(a.getBranchId());
-				sb.append(")'>View</button></td><td><button class='btn btn-success' data-toggle='modal' data-target='#editBranchModal' onclick='editBranch(");
-				sb.append(a.getBranchId());
-				sb.append(")'>Edit</button></td>");
-			}
-			sb.append("</table>");
-			response.getWriter().append(sb.toString());
-		} catch (ClassNotFoundException | SQLException | NumberFormatException e) {
-			e.printStackTrace();
-		}
-	}
-
-
 
 /* * * * * * * * * * * * * * * * * * GET: admin book * * * * * * * * * * * * * * * * * * */	
 	private void getAddBook(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -362,7 +244,7 @@ public class AdminServlet extends HttpServlet{
 			}
 			sb.append("</div><div class='form-group'><label class='control-label'>Add a New Publisher</label><input class='form-control' type='text' id='addNewPublisherName' placeholder='Publisher Name'>");
 			sb.append("<input class='form-control' type='text' id='addNewPublisherAddress' placeholder='Publiser Address'><input class='form-control' type='text' id='addNewPublisherPhone' placeholder='Publiser Phone'>");
-			sb.append("<button type='button' class='btn btn-primary' onclick='updateBookPublisher(1)'>Add Publisher</button></div><div class='form-group' id='addPickGenres'><label class='control-label'>Pick Genres:</label>");
+			sb.append("<button type='button' class='btn btn-primary' onclick='updateBookPublisher(2)'>Add Publisher</button></div><div class='form-group' id='addPickGenres'><label class='control-label'>Pick Genres:</label>");
 			for(Genre genre: allGenres){
 				sb.append("<label class='checkbox-inline'><input type='checkbox' id='editGenreId' name='editGenreId' value='");
 				sb.append(genre.getGenreId());
@@ -375,7 +257,7 @@ public class AdminServlet extends HttpServlet{
 				sb.append("</label>");
 			}
 			sb.append("</div><div class='form-group'><label class='control-label'>Add a New Genre</label><input class='form-control' type='text' id='addNewGenreName' placeholder='Genre Name'>");
-			sb.append("<button type='button' class='btn btn-primary' onclick='updateBookGenres(1)'>Add Genre</button></div><div class='form-group' id='addPickAuthors'><label class='control-label'>Pick Authors:</label>");
+			sb.append("<button type='button' class='btn btn-primary' onclick='updateBookGenres(2)'>Add Genre</button></div><div class='form-group' id='addPickAuthors'><label class='control-label'>Pick Authors:</label>");
 			for(Author author: allAuthors){
 				sb.append("<label class='checkbox-inline'><input type='checkbox' id='editAuthorId' name='editAuthorId' value='");
 				sb.append(author.getAuthorId());
@@ -388,7 +270,7 @@ public class AdminServlet extends HttpServlet{
 				sb.append("</label>");
 			}
 			sb.append("</div><div class='form-group'><label class='control-label'>Add a New Author</label><input class='form-control' type='text' id='addNewAuthorName' placeholder='Author Name'>");
-			sb.append("<button type='button' class='btn btn-primary' onclick='updateBookAuthors(1)'>Add Author</button></div>");
+			sb.append("<button type='button' class='btn btn-primary' onclick='updateBookAuthors(2)'>Add Author</button></div>");
 			
 			sb.append("<input type='hidden' id='editBookId' value='");
 			sb.append(book.getBookId());
@@ -1165,52 +1047,9 @@ public class AdminServlet extends HttpServlet{
 				e.printStackTrace();
 			}
 			break;
-		case "/librarian/editBranch":
-			try {
-				updateBranch(request, response);
-				//response.setStatus(200);
-			} catch (MySQLIntegrityConstraintViolationException | NumberFormatException | NullPointerException e) {
-				response.sendError(400);
-				e.printStackTrace();
-			} catch (ClassNotFoundException | SQLException e) {
-				response.sendError(500);
-				e.printStackTrace();
-			}
-			break;
-		case "/librarian/editBranchBooks":	
-			try {
-				editBranchBooks(request, response);
-				//response.setStatus(200);
-			} catch (MySQLIntegrityConstraintViolationException | NumberFormatException | NullPointerException e) {
-				response.sendError(400);
-				e.printStackTrace();
-			} catch (ClassNotFoundException | SQLException e) {
-				response.sendError(500);
-				e.printStackTrace();
-			}
-			break;
 		default:
 			break;
 		}
-	}
-	
-
-/* * * * * * * * * * * * * * * * * * POST: librarian * * * * * * * * * * * * * * * * * * */	
-	private void editBranchBooks(HttpServletRequest request, HttpServletResponse response) 
-			throws ClassNotFoundException, SQLException, NumberFormatException, NullPointerException, IOException{
-		Branch branch = new Branch();
-		branch.setBranchId(Integer.parseInt(request.getParameter("branchId")));
-		String bookCopies = request.getParameter("bookCopies");
-		System.out.println(bookCopies);
-		try{
-			Gson gson = new Gson();
-			String jsonString = gson.toJson(bookCopies);
-			JsonParser parser = new JsonParser();
-			JsonElement myElement = parser.parse(jsonString);
-		} catch (Exception e){
-			e.printStackTrace();
-		}
-		
 	}
 /* * * * * * * * * * * * * * * * * * POST: admin genre * * * * * * * * * * * * * * * * * * */
 	private void addGenre(HttpServletRequest request, HttpServletResponse response)

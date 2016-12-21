@@ -62,22 +62,19 @@ function updateBranch(){
 function editBranchBooks(){
 	var bookCopies = [];
 	$(".bookCopy").each(function(){
-		if($(this).val() != "0") bookCopies.push({id: $(this).attr('id'), copy: $(this).val()});
+		var copy = $(this).val();
+		if(copy && copy != "0") bookCopies.push({id: $(this).attr('id'), copy: $(this).val()});
 	});
 	bookCopies = JSON.stringify(bookCopies);
 	$.ajax({
 		url: "editBranchBooks",
 		type: "POST",
-		dataType: "JSON",
 		error: function (xhr,status,error) {
 			toastr["error"](error);
 	    },
 		success: function(response){
 			toastr["success"]("Successfully edited the book copy");
 			viewBranches(1);
-		},
-		beforeSend: function(xhr){
-			console.log(bookCopies);
 		},
 		data: {
 			branchId: $('#editBranchBookId').val(),

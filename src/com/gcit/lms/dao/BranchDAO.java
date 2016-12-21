@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gcit.lms.entity.BookCopy;
 import com.gcit.lms.entity.Branch;
 
 public class BranchDAO extends BaseDAO{
@@ -24,16 +25,33 @@ public class BranchDAO extends BaseDAO{
 				new Object[] { branch.getBranchName(), branch.getBranchAddress() });
 	}
 	
+	public void addAllBookCopiesByBranch(Branch branch) throws SQLException {
+		if(branch.getBookCopy() != null){
+			for(BookCopy bookCopy : branch.getBookCopy()){
+				save("insert into tbl_book_copies (bookId, branchId, noOfCopies) values (?, ?, ?)", new Object[] { bookCopy.getBook().getBookId(), branch.getBranchId(), bookCopy.getNoOfCopies() });
+			}
+		}
+	}
+	
 	public void updateBranch(Branch branch) throws SQLException {
 		save("update tbl_library_branch set branchName = ?, branchAddress = ? where branchId = ?",
 				new Object[] { branch.getBranchName(), branch.getBranchAddress(), branch.getBranchId() });
 	}
-
+	
+	public void updateBookCopiesByBranch(Branch branch) throws SQLException {
+		deleteAllBookCopiesByBranch(branch);
+		addAllBookCopiesByBranch(branch);
+	}
+	
 	public void deleteBranch(Branch branch) throws SQLException {
 		save("delete from tbl_library_branch where branchId = ?",
 				new Object[] { branch.getBranchId() });
 	}
-
+	
+	public void deleteAllBookCopiesByBranch(Branch branch) throws SQLException {
+		save("delete from tbl_book_copies where branchId = ?", new Object[] { branch.getBranchId() });
+	}
+	
 	public List<Branch> readAllBranches() throws SQLException {
 		return readAll("select * from tbl_library_branch", null);
 	}

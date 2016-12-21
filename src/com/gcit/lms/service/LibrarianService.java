@@ -30,4 +30,49 @@ public class LibrarianService {
 			}
 		} 
 	}
+	public Integer getBranchesCount(String q) throws ClassNotFoundException, SQLException {
+		try (Connection conn = ConnectionUtil.getNewConnection()) {
+			try {
+				BranchDAO branchDao = new BranchDAO(conn);
+				return branchDao.getBranchesCount(q);
+			} catch (SQLException e) {
+				throw e;
+			}
+		}
+	}
+	public List<Branch> readAllBranchesWithPageNo(Integer pageNo, Integer pageSize, String q)
+			throws SQLException, ClassNotFoundException {
+		try (Connection conn = ConnectionUtil.getNewConnection()) {
+			try {
+				BranchDAO branchDao = new BranchDAO(conn);
+				return branchDao.readAllBranchesWithPageNo(pageNo, pageSize, q);
+			} catch (SQLException e) {
+				throw e;
+			}
+		}
+	}
+	public void editBranch(Branch branch) throws SQLException, ClassNotFoundException {
+		try (Connection conn = ConnectionUtil.getNewConnection()) {
+			try {
+				BranchDAO branchDao = new BranchDAO(conn);
+				branchDao.updateBranch(branch);
+				conn.commit();
+			} catch (SQLException e) {
+				conn.rollback();
+				throw e;
+			}
+		}
+	}
+	public void updateBranchBookCopy(Branch branch) throws SQLException, ClassNotFoundException {
+		try (Connection conn = ConnectionUtil.getNewConnection()) {
+			try {
+				BranchDAO branchDao = new BranchDAO(conn);
+				branchDao.updateBookCopiesByBranch(branch);
+				conn.commit();
+			} catch (SQLException e) {
+				conn.rollback();
+				throw e;
+			}
+		}
+	}
 }
